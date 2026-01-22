@@ -1,0 +1,491 @@
+openapi: 3.0.3
+info:
+  title: Go Gin Backend Template API
+  description: |
+    A production-ready backend template built with Go Gin framework and PostgreSQL.
+
+    ## Authentication System
+    This API uses JWT-based authentication with the following features:
+    - User registration and login
+    - Access token (short-lived) + Refresh token (long-lived)
+    - **Cookie-based token storage** for security
+    - Token blacklist for logout functionality
+    - Health check endpoint for monitoring
+
+    Perfect for starting new backend projects with authentication built-in.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+tags:
+  - name: Health Check
+    description: API health monitoring endpoint
+  - name: Auth
+    description: User authentication and authorization endpoints
+
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      description: Check if the API server is running and healthy
+      tags:
+        - Health Check
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "ok"
+
+  /auth/register:
+    post:
+      summary: Register new user
+      description: |
+        Create a new user account with username and password.
+
+        **Validation Rules:**
+        - Username: 3-50 characters, alphanumeric and underscore only
+        - Password: 8-128 characters, must contain at least one lowercase, one uppercase, one digit, and one special character
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              username: "user123"
+              password: "SecurePass123!"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              example:
+                message: "註冊成功"
+                userId: 1
+        '400':
+          description: Validation failed - invalid username or password format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationFailed:
+                  summary: Validation error with details
+                  value:
+                    code: "ERR_VALIDATION_FAILED"
+                    error: "使用者名稱或密碼格式無效"
+                    details:
+                      Username: "長度至少需要 3 個字元"
+                      Password: "長度至少需要 8 個字元"
+                passwordTooLong:
+                  summary: Password too long
+                  value:
+                    code: "ERR_PASSWORD_TOO_LONG"
+                    error: "使用者名稱或密碼格式無效"
+        '409':
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_USERNAME_EXISTS"
+                error: "使用者名稱已存在"
+        '429':
+          description: Too many registration attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_RATE_LIMIT_EXCEEDED"
+                error: "請求次數過多,請稍後再試"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseError:
+                  summary: Database error
+                  value:
+                    code: "ERR_DATABASE_ERROR"
+                    error: "資料庫操作失敗"
+                internalError:
+                  summary: Internal server error
+                  value:
+                    code: "ERR_INTERNAL_SERVER_ERROR"
+                    error: "伺服器內部錯誤"
+
+  /auth/login:
+    post:
+      summary: User login
+      description: |
+        Authenticate user with username and password.
+
+        **Returns:**
+        - Access token in response body AND sets as cookie (non-httpOnly for frontend access)
+        - Refresh token is set as HTTP-only cookie only (not in response body for security)
+
+        **Cookies Set:**
+        - `access_token`: Access token cookie (SameSite=Lax, httpOnly=false)
+        - `refresh_token`: Refresh token cookie (SameSite=Strict, httpOnly=true, path=/auth/refresh)
+
+        **Security Note:**
+        All authentication failures (user not found, wrong password, rate limited) return the same generic error message to prevent username enumeration attacks.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              username: "user123"
+              password: "SecurePass123!"
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              description: Sets access_token and refresh_token cookies
+              schema:
+                type: string
+                example: access_token=eyJhbGc...; Path=/; SameSite=Lax; refresh_token=eyJhbGc...; Path=/auth/refresh; HttpOnly; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                user:
+                  id: 1
+                  username: "user123"
+                  experience: 0
+        '400':
+          description: Validation failed - missing username or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_VALIDATION_FAILED"
+                error: "使用者名稱或密碼格式無效"
+        '401':
+          description: Authentication failed - invalid username or password, or rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_AUTH_FAILED"
+                error: "使用者名稱或密碼無效"
+        '429':
+          description: Too many login attempts (returns 401 with ERR_AUTH_FAILED for security)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_AUTH_FAILED"
+                error: "使用者名稱或密碼無效"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_INTERNAL_SERVER_ERROR"
+                error: "伺服器內部錯誤"
+
+  /auth/logout:
+    post:
+      summary: User logout
+      description: |
+        Invalidate current tokens (add to blacklist) and clear token cookies.
+
+        **Note:** This endpoint can be called even if the tokens are already expired or invalid. It will gracefully handle missing or invalid tokens.
+
+        **Cookies Cleared:**
+        - `access_token`: Access token cookie
+        - `refresh_token`: Refresh token cookie
+
+        **Token Extraction:**
+        - Access token: From `Authorization: Bearer <token>` header OR `access_token` cookie
+        - Refresh token: From `refresh_token` cookie only
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Logout successful - tokens invalidated and cookies cleared
+          headers:
+            Set-Cookie:
+              description: Clears access_token and refresh_token cookies
+              schema:
+                type: string
+                example: access_token=; Path=/; Max-Age=-1; refresh_token=; Path=/auth/refresh; Max-Age=-1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+              example:
+                message: "登出成功"
+        '500':
+          description: Internal server error during logout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_INTERNAL_SERVER_ERROR"
+                error: "伺服器內部錯誤"
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: |
+        Use refresh token to obtain a new access token and refresh token pair.
+
+        **Important:** The refresh token is automatically read from the HTTP-only cookie `refresh_token`. No request body is needed.
+
+        **Cookies Set:**
+        - New `access_token` cookie (replaces old one)
+        - New `refresh_token` cookie (replaces old one)
+
+        **Returns:**
+        - New access token in response body
+        - User information
+      tags:
+        - Auth
+      parameters:
+        - in: cookie
+          name: refresh_token
+          required: true
+          schema:
+            type: string
+          description: Refresh token (automatically included from cookie)
+      responses:
+        '200':
+          description: Token refreshed successfully - new tokens issued
+          headers:
+            Set-Cookie:
+              description: Sets new access_token and refresh_token cookies
+              schema:
+                type: string
+                example: access_token=eyJhbGc...; Path=/; SameSite=Lax; refresh_token=eyJhbGc...; Path=/auth/refresh; HttpOnly; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                user:
+                  id: 1
+                  username: "user123"
+                  experience: 0
+        '401':
+          description: Invalid or expired refresh token, or refresh token missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_UNAUTHORIZED"
+                error: "未授權或權杖無效"
+        '500':
+          description: Internal server error during token refresh
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ERR_INTERNAL_SERVER_ERROR"
+                error: "伺服器內部錯誤"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token obtained from the login endpoint.
+
+        **Usage:**
+        Include in Authorization header: `Authorization: Bearer <token>`
+
+        **Note:** Access tokens are also stored in cookies and automatically included in requests.
+
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+      description: |
+        Access token stored in cookie (automatically included in requests).
+
+        **Cookie Name:** `access_token`
+        **Properties:** SameSite=Lax, httpOnly=false (allows frontend to read)
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code constant (e.g., ERR_USERNAME_EXISTS, ERR_VALIDATION_FAILED)
+          example: "ERR_VALIDATION_FAILED"
+        error:
+          type: string
+          description: User-friendly error message in Traditional Chinese
+          example: "使用者名稱或密碼格式無效"
+        details:
+          type: object
+          description: Optional field-level validation errors (only present for validation errors)
+          additionalProperties:
+            type: string
+          example:
+            Username: "長度至少需要 3 個字元"
+            Password: "長度至少需要 8 個字元"
+      required:
+        - code
+        - error
+
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_]+$'
+          description: Username (alphanumeric and underscore only)
+          example: "user123"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: Password (must contain lowercase, uppercase, digit, and special character)
+          example: "SecurePass123!"
+      required:
+        - username
+        - password
+
+    RegisterResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: "註冊成功"
+        userId:
+          type: integer
+          format: int64
+          description: Newly created user ID
+          example: 1
+      required:
+        - message
+        - userId
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username
+          example: "user123"
+        password:
+          type: string
+          description: Password
+          example: "SecurePass123!"
+      required:
+        - username
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (also set as cookie)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: '#/components/schemas/UserInfo'
+      required:
+        - accessToken
+        - user
+      description: |
+        **Note:** The refresh token is NOT included in the response body for security.
+        It is only set as an HTTP-only cookie.
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: User ID
+          example: 1
+        username:
+          type: string
+          description: Username
+          example: "user123"
+        experience:
+          type: integer
+          format: int32
+          description: User experience points
+          example: 0
+      required:
+        - id
+        - username
+        - experience
+
+    RefreshResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token (also set as cookie)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: '#/components/schemas/UserInfo'
+      required:
+        - accessToken
+        - user
+      description: |
+        **Note:** The new refresh token is NOT included in the response body for security.
+        It is only set as an HTTP-only cookie.
+
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: "登出成功"
+      required:
+        - message
