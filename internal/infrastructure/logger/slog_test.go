@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/linporu/waterballsa-backend-golang/internal/config"
+	"github.com/richardlinio/gin-template/internal/config"
 )
 
 func TestParseLogLevel(t *testing.T) {

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
-	"github.com/linporu/waterballsa-backend-golang/tests/bdd/steps/common"
-	"github.com/linporu/waterballsa-backend-golang/tests/bdd/testcontext"
-	"github.com/linporu/waterballsa-backend-golang/tests/testutil"
+	"github.com/richardlinio/gin-template/tests/bdd/steps/common"
+	"github.com/richardlinio/gin-template/tests/bdd/testcontext"
+	"github.com/richardlinio/gin-template/tests/testutil"
 )
 
 var (

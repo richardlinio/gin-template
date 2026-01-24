@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/linporu/waterballsa-backend-golang/internal/app"
+	"github.com/richardlinio/gin-template/internal/app"
 )
 
 func main() {

@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/linporu/waterballsa-backend-golang/internal/db"
-	"github.com/linporu/waterballsa-backend-golang/internal/model"
+	"github.com/richardlinio/gin-template/internal/db"
+	"github.com/richardlinio/gin-template/internal/model"
 )
 
 // ErrUserNotFound is returned when a user is not found in the database

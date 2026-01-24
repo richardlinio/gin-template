@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/linporu/waterballsa-backend-golang/internal/infrastructure/scheduler"
-	"github.com/linporu/waterballsa-backend-golang/internal/repository"
+	"github.com/richardlinio/gin-template/internal/infrastructure/scheduler"
+	"github.com/richardlinio/gin-template/internal/repository"
 )
 
 // expiredRefreshTokenCleaner is used by TokenCleanup job to clean expired refresh tokens

@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/linporu/waterballsa-backend-golang/internal/config"
-	"github.com/linporu/waterballsa-backend-golang/internal/middleware"
+	"github.com/richardlinio/gin-template/internal/config"
+	"github.com/richardlinio/gin-template/internal/middleware"
 )
 
 const (

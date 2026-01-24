@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/linporu/waterballsa-backend-golang/internal/config"
+	"github.com/richardlinio/gin-template/internal/config"
 )
 
 // NewLogger creates and configures a new slog.Logger instance

@@ -3,8 +3,8 @@ package middleware
 import (
 	jwt "github.com/appleboy/gin-jwt/v3"
 	"github.com/gin-gonic/gin"
-	"github.com/linporu/waterballsa-backend-golang/internal/apperror"
-	"github.com/linporu/waterballsa-backend-golang/internal/model"
+	"github.com/richardlinio/gin-template/internal/apperror"
+	"github.com/richardlinio/gin-template/internal/model"
 )
 
 // JWTAuth returns a middleware that validates JWT tokens

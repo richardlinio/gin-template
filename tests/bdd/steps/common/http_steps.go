@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
-	"github.com/linporu/waterballsa-backend-golang/tests/bdd/testcontext"
+	"github.com/richardlinio/gin-template/tests/bdd/testcontext"
 )
 
 // defaultHTTPClient is a shared HTTP client for all test requests

@@ -1,4 +1,4 @@
-module github.com/linporu/waterballsa-backend-golang
+module github.com/richardlinio/gin-template
 
 go 1.25.5
 

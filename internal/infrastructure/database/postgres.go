@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/linporu/waterballsa-backend-golang/internal/config"
+	"github.com/richardlinio/gin-template/internal/config"
 )
 
 // NewPostgresPool creates a new PostgreSQL connection pool
