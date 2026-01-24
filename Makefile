@@ -1,4 +1,4 @@
-# Makefile for WaterBall SA Backend (Golang)
+# Makefile for Gin Template Backend
 
 # Docker command variables
 DOCKER_EXEC=docker exec backend

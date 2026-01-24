@@ -131,8 +131,8 @@ See full API documentation in [docs/api-docs/swagger.yaml](docs/api-docs/swagger
 Update `go.mod` and all import paths:
 
 ```bash
-# Find and replace "github.com/linporu/waterballsa-backend-golang"
-# with your module name across all .go files
+# Find and replace "github.com/linporu/gin-template"
+# with your own module name across all .go files and go.mod
 ```
 
 ### 2. Update Configuration

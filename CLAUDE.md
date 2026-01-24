@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-WaterBall SA Backend - A Golang REST API backend for an educational platform using Gin framework, PostgreSQL, and layer-based architecture.
+Gin Template Backend - A production-ready Golang REST API backend template using Gin framework, PostgreSQL, and layer-based architecture.
 
 - **Go Version**: 1.25.5
 - **Main Framework**: Gin (HTTP server)
