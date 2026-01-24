@@ -86,7 +86,7 @@ Configuration is loaded exclusively from environment variables (see [.env.exampl
 - **Database Config**: Host, port, user, password, dbname, connection pool settings
 - **Logger Config**: Level (debug/info/warn/error), format (json/text)
 - **CORS Config**: Allowed origins, credentials, max age
-- **JWT Config**: Secret key (planned feature)
+- **JWT Config**: Secret key, token timeouts, cookie settings (names, paths, domain, secure flag), realm
 
 All config structs are in `internal/config/` with dedicated files:
 
@@ -95,10 +95,12 @@ All config structs are in `internal/config/` with dedicated files:
 - [database.go](internal/config/database.go) - Database config
 - [logger.go](internal/config/logger.go) - Logger config
 - [cors.go](internal/config/cors.go) - CORS config
+- [jwt.go](internal/config/jwt.go) - JWT config
 
 **Adding New Config:**
 
 When adding new configuration, maintain consistency with pass-by-value pattern:
+
 - Loader functions return values, not pointers: `func loadXxxConfig() (XxxConfig, error)`
 - Config struct stores values: `type Config struct { Xxx XxxConfig }`
 - Functions receive values: `func NewHandler(cfg config.XxxConfig)`
@@ -222,11 +224,26 @@ if err := h.service.SomeMethod(ctx, req); err != nil {
 - ✅ Middleware automatically creates JSON response
 - ❌ DO NOT manually call `c.JSON()` for errors in handlers
 
+#### Error Code Organization
+
+Error codes in all three files (`codes.go`, `messages.go`, `status.go`) **must be organized by HTTP status code** in ascending order:
+
+- 400 (Bad Request)
+- 401 (Unauthorized)
+- 403 (Forbidden)
+- 404 (Not Found)
+- 409 (Conflict)
+- 429 (Too Many Requests)
+- 500 (Internal Server Error)
+- 503 (Service Unavailable)
+
+This ensures consistency and makes error codes easier to locate and maintain.
+
 #### Adding New Error Types
 
 Follow these 5 steps to add a new error type:
 
-**Step 1:** Add error code constant in [internal/apperror/codes.go](internal/apperror/codes.go):
+**Step 1:** Add error code constant in [internal/apperror/codes.go](internal/apperror/codes.go) **under the appropriate HTTP status code section**:
 
 ```go
 const (
