@@ -86,7 +86,7 @@ Configuration is loaded exclusively from environment variables (see [.env.exampl
 - **Database Config**: Host, port, user, password, dbname, connection pool settings
 - **Logger Config**: Level (debug/info/warn/error), format (json/text)
 - **CORS Config**: Allowed origins, credentials, max age
-- **JWT Config**: Secret key (planned feature)
+- **JWT Config**: Secret key, token timeouts, cookie settings (names, paths, domain, secure flag), realm
 
 All config structs are in `internal/config/` with dedicated files:
 
@@ -95,6 +95,7 @@ All config structs are in `internal/config/` with dedicated files:
 - [database.go](internal/config/database.go) - Database config
 - [logger.go](internal/config/logger.go) - Logger config
 - [cors.go](internal/config/cors.go) - CORS config
+- [jwt.go](internal/config/jwt.go) - JWT config
 
 **Adding New Config:**
 
