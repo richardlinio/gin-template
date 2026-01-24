@@ -52,7 +52,7 @@ func NewTestServer(ctx context.Context, dbHost, dbPort string) (*TestServer, err
 		"LOG_FORMAT":           "text",
 		"CORS_ALLOWED_ORIGINS": "http://localhost:3000",
 		"RATE_LIMIT_ENABLED":   "false",
-		"JWT_SECRET": "test-jwt-secret-key-at-least-32-characters-long-for-testing",
+		"JWT_SECRET":           "test-jwt-secret-key-at-least-32-characters-long-for-testing",
 	}
 	if err := setEnvVars(envVars); err != nil {
 		return nil, err
