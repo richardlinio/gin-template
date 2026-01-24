@@ -26,14 +26,20 @@ All commands below run inside Docker containers. Ensure Docker is running and co
 # Format code
 make fmt
 
-# Run linter
+# Run linter (includes Go build verification)
 make lint
-
-# Build the application (inside Docker)
-make build
 
 # Run all tests (inside Docker)
 make test
+
+# Start Docker containers
+make up
+
+# Stop Docker containers and remove volumes
+make down
+
+# Rebuild Docker images from scratch
+make build
 ```
 
 ### Database Migrations
