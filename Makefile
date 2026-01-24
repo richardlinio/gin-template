@@ -1,4 +1,4 @@
-# Makefile for WaterBall SA Backend (Golang)
+# Makefile for Gin Template Backend
 
 # Docker command variables
 DOCKER_EXEC=docker exec backend
@@ -23,8 +23,8 @@ lint:
 test:
 	$(DOCKER_EXEC) go test ./...
 
-.PHONY: build
-build:
+.PHONY: go-build
+go-build:
 	$(DOCKER_EXEC) go build -o /dev/null ./...
 
 .PHONY: tidy
@@ -55,3 +55,20 @@ migrate-reset:
 .PHONY: test-bdd-isa
 test-bdd-isa:
 	$(DOCKER_EXEC) go test -v ./tests/bdd -run TestFeatures
+
+.PHONY: swagger
+swagger:
+	npx @apidevtools/swagger-cli bundle docs/api-docs/swagger.yaml -o docs/api-docs/bundled-swagger.yaml -t yaml
+	@echo "✓ Bundled swagger file generated at docs/api-docs/bundled-swagger.yaml"
+
+.PHONY: up
+up:
+	docker compose up -d
+
+.PHONY: build
+build:
+	docker compose build --no-cache
+
+.PHONY: down
+down:
+	docker compose down -v

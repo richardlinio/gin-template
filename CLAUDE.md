@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-WaterBall SA Backend - A Golang REST API backend for an educational platform using Gin framework, PostgreSQL, and layer-based architecture.
+Gin Template Backend - A production-ready Golang REST API backend template using Gin framework, PostgreSQL, and layer-based architecture.
 
 - **Go Version**: 1.25.5
 - **Main Framework**: Gin (HTTP server)
@@ -26,14 +26,20 @@ All commands below run inside Docker containers. Ensure Docker is running and co
 # Format code
 make fmt
 
-# Run linter
+# Run linter (includes Go build verification)
 make lint
-
-# Build the application (inside Docker)
-make build
 
 # Run all tests (inside Docker)
 make test
+
+# Start Docker containers
+make up
+
+# Stop Docker containers and remove volumes
+make down
+
+# Rebuild Docker images from scratch
+make build
 ```
 
 ### Database Migrations

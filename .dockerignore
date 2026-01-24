@@ -1,0 +1,40 @@
+# Build artifacts
+tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+
+# Environment files (will be mounted as volume)
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+docs/
+
+# Test files (can be included if needed)
+*_test.go
+
+# Dependencies (will be downloaded in container)
+vendor/
+
+# Database data
+postgres_data/
+
+# Air build logs
+build-errors.log
+
+# OS files
+.DS_Store
+Thumbs.db
