@@ -310,15 +310,6 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 	return string(ns.UserRole), nil
 }
 
-type AccessToken struct {
-	ID            int64            `json:"id"`
-	TokenJti      string           `json:"token_jti"`
-	UserID        int64            `json:"user_id"`
-	ExpiresAt     pgtype.Timestamp `json:"expires_at"`
-	InvalidatedAt pgtype.Timestamp `json:"invalidated_at"`
-	CreatedAt     pgtype.Timestamp `json:"created_at"`
-}
-
 type Chapter struct {
 	ID         int64            `json:"id"`
 	JourneyID  int64            `json:"journey_id"`

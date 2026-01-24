@@ -91,14 +91,13 @@ func NewTestServer(ctx context.Context, dbHost, dbPort string) (*TestServer, err
 
 	// Initialize repository layer
 	userRepository := repository.NewUserRepository(queries)
-	accessTokenRepository := repository.NewAccessTokenRepository(queries)
 	refreshTokenRepository := repository.NewRefreshTokenRepository(queries)
 
 	// Initialize token generator
 	tokenGenerator := auth.NewJWTTokenGenerator(cfg.JWT)
 
 	// Initialize service layer
-	authService := service.NewAuthService(userRepository, accessTokenRepository, refreshTokenRepository, tokenGenerator)
+	authService := service.NewAuthService(userRepository, refreshTokenRepository, tokenGenerator)
 
 	// Initialize JWT middleware
 	jwtMiddleware, err := auth.NewJWTMiddleware(cfg.JWT, middleware.ExtractIdentity, middleware.Authorize, middleware.HandleUnauthorized)
@@ -115,14 +114,10 @@ func NewTestServer(ctx context.Context, dbHost, dbPort string) (*TestServer, err
 	healthHandler := handler.NewHealthHandler(pool, log, cfg.Server.RequestTimeout)
 	authHandler := handler.NewAuthHandler(authService, jwtMiddleware, cfg.JWT, log, cfg.Server.RequestTimeout)
 
-	// Initialize blacklist checker middleware
-	//nolint:contextcheck // False positive: middleware correctly captures context from c.Request.Context() at request time
-	blacklistChecker := middleware.BlacklistChecker(accessTokenRepository)
-
 	// Setup Gin router with test mode
 	gin.SetMode(gin.TestMode)
 	ginEngine := gin.New()
-	r := router.NewRouter(ginEngine, cfg.CORS, cfg.RateLimit, cfg.JWT, log, healthHandler, authHandler, jwtMiddleware, blacklistChecker)
+	r := router.NewRouter(ginEngine, cfg.CORS, cfg.RateLimit, cfg.JWT, log, healthHandler, authHandler, jwtMiddleware)
 	r.Setup()
 
 	return &TestServer{
