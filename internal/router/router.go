@@ -13,15 +13,14 @@ import (
 )
 
 type Router struct {
-	engine           *gin.Engine
-	corsConfig       config.CORSConfig
-	rateLimitConfig  config.RateLimitConfig
-	jwtConfig        config.JWTConfig
-	logger           *slog.Logger
-	healthHandler    *handler.HealthHandler
-	authHandler      *handler.AuthHandler
-	jwtMiddleware    *jwt.GinJWTMiddleware
-	blacklistChecker gin.HandlerFunc
+	engine          *gin.Engine
+	corsConfig      config.CORSConfig
+	rateLimitConfig config.RateLimitConfig
+	jwtConfig       config.JWTConfig
+	logger          *slog.Logger
+	healthHandler   *handler.HealthHandler
+	authHandler     *handler.AuthHandler
+	jwtMiddleware   *jwt.GinJWTMiddleware
 }
 
 func NewRouter(
@@ -33,18 +32,16 @@ func NewRouter(
 	healthHandler *handler.HealthHandler,
 	authHandler *handler.AuthHandler,
 	jwtMiddleware *jwt.GinJWTMiddleware,
-	blacklistChecker gin.HandlerFunc,
 ) *Router {
 	return &Router{
-		engine:           engine,
-		corsConfig:       corsConfig,
-		rateLimitConfig:  rateLimitConfig,
-		jwtConfig:        jwtConfig,
-		logger:           logger,
-		healthHandler:    healthHandler,
-		authHandler:      authHandler,
-		jwtMiddleware:    jwtMiddleware,
-		blacklistChecker: blacklistChecker,
+		engine:          engine,
+		corsConfig:      corsConfig,
+		rateLimitConfig: rateLimitConfig,
+		jwtConfig:       jwtConfig,
+		logger:          logger,
+		healthHandler:   healthHandler,
+		authHandler:     authHandler,
+		jwtMiddleware:   jwtMiddleware,
 	}
 }
 
@@ -98,10 +95,9 @@ func (r *Router) setupAuthRoutes() {
 		auth.POST("/refresh", r.authHandler.Refresh)
 	}
 
-	// Protected routes (require JWT authentication and blacklist check)
+	// Protected routes (require JWT authentication)
 	authProtected := r.engine.Group("/auth")
 	authProtected.Use(middleware.JWTAuth(r.jwtMiddleware))
-	authProtected.Use(r.blacklistChecker)
 	{
 		authProtected.POST("/logout", r.authHandler.Logout)
 	}

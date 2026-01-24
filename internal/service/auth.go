@@ -21,12 +21,6 @@ type userRepository interface {
 	ExistsByUsername(ctx context.Context, username string) (bool, error)
 }
 
-// accessTokenRepository provides access token blacklist operations for AuthService
-type accessTokenRepository interface {
-	Invalidate(ctx context.Context, jti string, userID int64, expiresAt time.Time) error
-	IsInvalidated(ctx context.Context, jti string) (bool, error)
-}
-
 // refreshTokenRepository provides refresh token persistence operations for AuthService
 type refreshTokenRepository interface {
 	Create(ctx context.Context, jti string, userID int64, expiresAt time.Time) error
@@ -45,7 +39,6 @@ type tokenGenerator interface {
 // AuthService implements authentication business logic operations.
 type AuthService struct {
 	userRepository         userRepository
-	accessTokenRepository  accessTokenRepository
 	refreshTokenRepository refreshTokenRepository
 	tokenGenerator         tokenGenerator
 }
@@ -62,13 +55,11 @@ type LoginResult struct {
 // NewAuthService creates a new AuthService instance.
 func NewAuthService(
 	userRepository *repository.UserRepository,
-	accessTokenRepository *repository.AccessTokenRepository,
 	refreshTokenRepository *repository.RefreshTokenRepository,
 	tokenGenerator *auth.JWTTokenGenerator,
 ) *AuthService {
 	return &AuthService{
 		userRepository:         userRepository,
-		accessTokenRepository:  accessTokenRepository,
 		refreshTokenRepository: refreshTokenRepository,
 		tokenGenerator:         tokenGenerator,
 	}
@@ -147,16 +138,10 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (*LoginRe
 }
 
 func (s *AuthService) Logout(ctx context.Context, accessToken, refreshToken string) error {
-	// Invalidate access token if provided
-	if accessToken != "" {
-		jti, userID, expiresAt, err := s.tokenGenerator.ParseAccessToken(accessToken)
-		if err == nil {
-			// Best effort: add to blacklist, ignore errors
-			_ = s.accessTokenRepository.Invalidate(ctx, jti, userID, expiresAt)
-		}
-	}
+	// Note: Access tokens are not invalidated - they will naturally expire after 15 minutes.
+	// This is acceptable for short-lived tokens.
 
-	// Revoke refresh token if provided
+	// Revoke refresh token if provided to prevent generating new access tokens
 	if refreshToken != "" {
 		jti, _, _, err := s.tokenGenerator.ParseRefreshToken(refreshToken)
 		if err == nil {
