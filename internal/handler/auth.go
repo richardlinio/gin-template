@@ -68,10 +68,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, dto.RegisterResponse{
-		Message: "註冊成功",
-		UserID:  userID,
-	})
+	message := "註冊成功"
+	response := dto.ToRegisterResponse(message, userID)
+	c.JSON(http.StatusCreated, response)
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -94,10 +93,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	h.setAccessTokenCookie(c, result.AccessToken, result.AccessTokenExpire)
 	h.setRefreshTokenCookie(c, result.RefreshToken, result.RefreshTokenExpire)
 
-	c.JSON(http.StatusOK, dto.LoginResponse{
-		AccessToken: result.AccessToken,
-		User:        result.UserInfo,
-	})
+	response := dto.ToLoginResponse(result.AccessToken, result.UserID, result.Username, result.Experience)
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -116,9 +113,9 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	h.clearAccessTokenCookie(c)
 	h.clearRefreshTokenCookie(c)
 
-	c.JSON(http.StatusOK, dto.LogoutResponse{
-		Message: "登出成功",
-	})
+	message := "登出成功"
+	response := dto.ToLogoutResponse(message)
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
@@ -140,10 +137,8 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	h.setAccessTokenCookie(c, result.AccessToken, result.AccessTokenExpire)
 	h.setRefreshTokenCookie(c, result.RefreshToken, result.RefreshTokenExpire)
 
-	c.JSON(http.StatusOK, dto.RefreshResponse{
-		AccessToken: result.AccessToken,
-		User:        result.UserInfo,
-	})
+	response := dto.ToRefreshResponse(result.AccessToken, result.UserID, result.Username, result.Experience)
+	c.JSON(http.StatusOK, response)
 }
 
 // setAccessTokenCookie sets the access token as a cookie (not HTTP-only for frontend access)

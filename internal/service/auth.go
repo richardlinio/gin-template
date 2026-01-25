@@ -49,7 +49,10 @@ type LoginResult struct {
 	AccessTokenExpire  time.Time
 	RefreshToken       string
 	RefreshTokenExpire time.Time
-	UserInfo           dto.UserInfo
+	// User information fields
+	UserID     int64
+	Username   string
+	Experience int32
 }
 
 // NewAuthService creates a new AuthService instance.
@@ -129,11 +132,9 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (*LoginRe
 		AccessTokenExpire:  accessExpire,
 		RefreshToken:       refreshToken,
 		RefreshTokenExpire: refreshExpire,
-		UserInfo: dto.UserInfo{
-			ID:         user.ID,
-			Username:   user.Username,
-			Experience: user.ExperiencePoints,
-		},
+		UserID:             user.ID,
+		Username:           user.Username,
+		Experience:         user.ExperiencePoints,
 	}, nil
 }
 
@@ -211,10 +212,8 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*LoginR
 		AccessTokenExpire:  accessExpire,
 		RefreshToken:       newRefreshToken,
 		RefreshTokenExpire: refreshExpire,
-		UserInfo: dto.UserInfo{
-			ID:         user.ID,
-			Username:   user.Username,
-			Experience: user.ExperiencePoints,
-		},
+		UserID:             user.ID,
+		Username:           user.Username,
+		Experience:         user.ExperiencePoints,
 	}, nil
 }
