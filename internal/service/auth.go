@@ -10,6 +10,7 @@ import (
 	"github.com/richardlinio/gin-template/internal/infrastructure/auth"
 	"github.com/richardlinio/gin-template/internal/model"
 	"github.com/richardlinio/gin-template/internal/repository"
+	"github.com/richardlinio/gin-template/internal/store"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -41,6 +42,8 @@ type AuthService struct {
 	userRepository         userRepository
 	refreshTokenRepository refreshTokenRepository
 	tokenGenerator         tokenGenerator
+	store                  *store.Store
+	transactionTimeout     time.Duration
 }
 
 // LoginResult holds the complete result of a successful login
@@ -60,11 +63,15 @@ func NewAuthService(
 	userRepository *repository.UserRepository,
 	refreshTokenRepository *repository.RefreshTokenRepository,
 	tokenGenerator *auth.JWTTokenGenerator,
+	st *store.Store,
+	transactionTimeout time.Duration,
 ) *AuthService {
 	return &AuthService{
 		userRepository:         userRepository,
 		refreshTokenRepository: refreshTokenRepository,
 		tokenGenerator:         tokenGenerator,
+		store:                  st,
+		transactionTimeout:     transactionTimeout,
 	}
 }
 
@@ -72,15 +79,6 @@ func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (in
 	// bcrypt can only handle up to 72 bytes
 	if len(req.Password) > 72 {
 		return 0, apperror.PasswordTooLong()
-	}
-
-	// Check if username already exists
-	exists, err := s.userRepository.ExistsByUsername(ctx, req.Username)
-	if err != nil {
-		return 0, apperror.DatabaseError(err)
-	}
-	if exists {
-		return 0, apperror.UsernameExists()
 	}
 
 	// Hash password
@@ -92,6 +90,9 @@ func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (in
 	// Create user
 	userID, err := s.userRepository.Create(ctx, req.Username, string(passwordHash))
 	if err != nil {
+		if errors.Is(err, repository.ErrUsernameDuplicate) {
+			return 0, apperror.UsernameExists()
+		}
 		return 0, apperror.DatabaseError(err)
 	}
 
@@ -159,51 +160,45 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*LoginR
 		return nil, apperror.Unauthorized()
 	}
 
-	// Parse refresh token
+	// Parse refresh token (outside transaction - CPU-bound)
 	jti, userID, _, err := s.tokenGenerator.ParseRefreshToken(refreshToken)
 	if err != nil {
 		return nil, apperror.Unauthorized()
 	}
 
-	// Check if refresh token exists and is valid in database
-	dbToken, err := s.refreshTokenRepository.GetByJTI(ctx, jti)
-	if err != nil {
-		if errors.Is(err, repository.ErrRefreshTokenNotFound) {
-			return nil, apperror.Unauthorized()
-		}
-		return nil, apperror.DatabaseError(err)
-	}
-
-	// Verify user ID matches
-	if dbToken.UserID != userID {
-		return nil, apperror.Unauthorized()
-	}
-
-	// Get fresh user data
+	// Get fresh user data (outside transaction - for response only)
 	user, err := s.userRepository.GetByID(ctx, userID)
 	if err != nil {
 		return nil, apperror.Unauthorized()
 	}
 
-	// Revoke the old refresh token (token rotation)
-	if err := s.refreshTokenRepository.Revoke(ctx, jti); err != nil {
-		return nil, apperror.DatabaseError(err)
-	}
-
-	// Generate new access token
+	// Generate new tokens (outside transaction - CPU-bound, fail-fast)
 	newAccessToken, _, accessExpire, err := s.tokenGenerator.GenerateAccessToken(user)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	// Generate new refresh token
 	newRefreshToken, newRefreshJTI, refreshExpire, err := s.tokenGenerator.GenerateRefreshToken(user.ID)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 
-	// Store new refresh token in database
-	if err := s.refreshTokenRepository.Create(ctx, newRefreshJTI, user.ID, refreshExpire); err != nil {
+	// Execute token rotation transaction
+	// This ensures atomic revocation and creation of tokens
+	txCtx, cancel := context.WithTimeout(ctx, s.transactionTimeout)
+	defer cancel()
+
+	_, err = s.store.RefreshTokenTx(txCtx, store.RefreshTokenTxParams{
+		OldJTI:       jti,
+		UserID:       userID,
+		NewJTI:       newRefreshJTI,
+		NewExpiresAt: refreshExpire,
+	})
+	if err != nil {
+		// Check for specific error types - all auth failures should return Unauthorized
+		if errors.Is(err, repository.ErrRefreshTokenNotFound) || errors.Is(err, store.ErrTokenUserMismatch) {
+			return nil, apperror.Unauthorized()
+		}
 		return nil, apperror.DatabaseError(err)
 	}
 

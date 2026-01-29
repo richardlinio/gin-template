@@ -1,7 +1,7 @@
 # Makefile for Gin Template Backend
 
 # Docker command variables
-DOCKER_EXEC=docker exec backend
+DOCKER_EXEC=docker compose exec backend
 
 # Database Migration Commands (using goose)
 # Environment variables are passed from docker-compose.yml

@@ -20,6 +20,7 @@ import (
 	"github.com/richardlinio/gin-template/internal/repository"
 	"github.com/richardlinio/gin-template/internal/router"
 	"github.com/richardlinio/gin-template/internal/service"
+	"github.com/richardlinio/gin-template/internal/store"
 	"github.com/richardlinio/gin-template/internal/validator"
 )
 
@@ -89,6 +90,9 @@ func NewTestServer(ctx context.Context, dbHost, dbPort string) (*TestServer, err
 	// Initialize data layer (sqlc queries)
 	queries := db.New(pool)
 
+	// Initialize store (transaction support)
+	st := store.New(pool)
+
 	// Initialize repository layer
 	userRepository := repository.NewUserRepository(queries)
 	refreshTokenRepository := repository.NewRefreshTokenRepository(queries)
@@ -97,7 +101,7 @@ func NewTestServer(ctx context.Context, dbHost, dbPort string) (*TestServer, err
 	tokenGenerator := auth.NewJWTTokenGenerator(cfg.JWT)
 
 	// Initialize service layer
-	authService := service.NewAuthService(userRepository, refreshTokenRepository, tokenGenerator)
+	authService := service.NewAuthService(userRepository, refreshTokenRepository, tokenGenerator, st, cfg.Database.TransactionTimeout)
 
 	// Initialize JWT middleware
 	jwtMiddleware, err := auth.NewJWTMiddleware(cfg.JWT, middleware.ExtractIdentity, middleware.Authorize, middleware.HandleUnauthorized)

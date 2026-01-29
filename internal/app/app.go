@@ -25,6 +25,7 @@ import (
 	"github.com/richardlinio/gin-template/internal/repository"
 	"github.com/richardlinio/gin-template/internal/router"
 	"github.com/richardlinio/gin-template/internal/service"
+	"github.com/richardlinio/gin-template/internal/store"
 	"github.com/richardlinio/gin-template/internal/validator"
 	"golang.org/x/sync/errgroup"
 )
@@ -68,6 +69,9 @@ func New() (*Application, error) {
 	// Initialize data layer (sqlc queries)
 	queries := db.New(pool)
 
+	// Initialize store (transaction support)
+	st := store.New(pool)
+
 	// Initialize repository layer (data access)
 	userRepository := repository.NewUserRepository(queries)
 	refreshTokenRepository := repository.NewRefreshTokenRepository(queries)
@@ -76,7 +80,7 @@ func New() (*Application, error) {
 	tokenGenerator := auth.NewJWTTokenGenerator(cfg.JWT)
 
 	// Initialize service layer (business logic)
-	authService := service.NewAuthService(userRepository, refreshTokenRepository, tokenGenerator)
+	authService := service.NewAuthService(userRepository, refreshTokenRepository, tokenGenerator, st, cfg.Database.TransactionTimeout)
 
 	// Initialize JWT middleware
 	jwtMiddleware, err := auth.NewJWTMiddleware(cfg.JWT, middleware.ExtractIdentity, middleware.Authorize, middleware.HandleUnauthorized)
