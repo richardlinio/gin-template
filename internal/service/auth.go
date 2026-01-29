@@ -78,15 +78,6 @@ func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (in
 		return 0, apperror.PasswordTooLong()
 	}
 
-	// Check if username already exists
-	exists, err := s.userRepository.ExistsByUsername(ctx, req.Username)
-	if err != nil {
-		return 0, apperror.DatabaseError(err)
-	}
-	if exists {
-		return 0, apperror.UsernameExists()
-	}
-
 	// Hash password
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -96,6 +87,9 @@ func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (in
 	// Create user
 	userID, err := s.userRepository.Create(ctx, req.Username, string(passwordHash))
 	if err != nil {
+		if errors.Is(err, repository.ErrUsernameDuplicate) {
+			return 0, apperror.UsernameExists()
+		}
 		return 0, apperror.DatabaseError(err)
 	}
 
