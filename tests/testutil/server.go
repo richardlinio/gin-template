@@ -101,7 +101,7 @@ func NewTestServer(ctx context.Context, dbHost, dbPort string) (*TestServer, err
 	tokenGenerator := auth.NewJWTTokenGenerator(cfg.JWT)
 
 	// Initialize service layer
-	authService := service.NewAuthService(userRepository, refreshTokenRepository, tokenGenerator, st)
+	authService := service.NewAuthService(userRepository, refreshTokenRepository, tokenGenerator, st, cfg.Database.TransactionTimeout)
 
 	// Initialize JWT middleware
 	jwtMiddleware, err := auth.NewJWTMiddleware(cfg.JWT, middleware.ExtractIdentity, middleware.Authorize, middleware.HandleUnauthorized)
