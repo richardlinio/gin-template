@@ -135,7 +135,6 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (*LoginRe
 		RefreshTokenExpire: refreshExpire,
 		UserID:             user.ID,
 		Username:           user.Username,
-		Experience:         user.ExperiencePoints,
 	}, nil
 }
 
@@ -209,6 +208,5 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*LoginR
 		RefreshTokenExpire: refreshExpire,
 		UserID:             user.ID,
 		Username:           user.Username,
-		Experience:         user.ExperiencePoints,
 	}, nil
 }

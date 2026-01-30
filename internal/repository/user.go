@@ -40,14 +40,12 @@ func (r *UserRepository) GetByID(ctx context.Context, id int64) (*model.User, er
 	}
 
 	user := &model.User{
-		ID:               row.ID,
-		Username:         row.Username,
-		PasswordHash:     row.PasswordHash,
-		Role:             string(row.Role),
-		ExperiencePoints: row.ExperiencePoints,
-		Level:            row.Level,
-		CreatedAt:        row.CreatedAt.Time,
-		UpdatedAt:        row.UpdatedAt.Time,
+		ID:           row.ID,
+		Username:     row.Username,
+		PasswordHash: row.PasswordHash,
+		Role:         string(row.Role),
+		CreatedAt:    row.CreatedAt.Time,
+		UpdatedAt:    row.UpdatedAt.Time,
 	}
 
 	return user, nil
@@ -65,14 +63,12 @@ func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*m
 
 	// Convert db row to domain model
 	user := &model.User{
-		ID:               row.ID,
-		Username:         row.Username,
-		PasswordHash:     row.PasswordHash,
-		Role:             string(row.Role),
-		ExperiencePoints: row.ExperiencePoints,
-		Level:            row.Level,
-		CreatedAt:        row.CreatedAt.Time,
-		UpdatedAt:        row.UpdatedAt.Time,
+		ID:           row.ID,
+		Username:     row.Username,
+		PasswordHash: row.PasswordHash,
+		Role:         string(row.Role),
+		CreatedAt:    row.CreatedAt.Time,
+		UpdatedAt:    row.UpdatedAt.Time,
 	}
 
 	return user, nil
