@@ -50,7 +50,7 @@ func loadJWTConfig() (JWTConfig, error) {
 	// Load optional cookie domain
 	cookieDomain := os.Getenv("JWT_COOKIE_DOMAIN")
 
-	// Load optional realm (default: "waterballsa")
+	// Load optional realm (default: "API")
 	realm := os.Getenv("JWT_REALM")
 	if realm == "" {
 		realm = "API"
@@ -69,7 +69,7 @@ func loadJWTConfig() (JWTConfig, error) {
 
 	refreshCookiePath := os.Getenv("JWT_REFRESH_COOKIE_PATH")
 	if refreshCookiePath == "" {
-		refreshCookiePath = "/auth/refresh"
+		refreshCookiePath = "/api/auth/refresh"
 	}
 
 	return JWTConfig{
