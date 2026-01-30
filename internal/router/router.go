@@ -93,12 +93,6 @@ func (r *Router) setupAuthRoutes() {
 		auth.POST("/register", r.authHandler.Register)
 		auth.POST("/login", r.authHandler.Login)
 		auth.POST("/refresh", r.authHandler.Refresh)
-	}
-
-	// Protected routes (require JWT authentication)
-	authProtected := r.engine.Group("/auth")
-	authProtected.Use(middleware.JWTAuth(r.jwtMiddleware))
-	{
-		authProtected.POST("/logout", r.authHandler.Logout)
+		auth.POST("/logout", r.authHandler.Logout)
 	}
 }
