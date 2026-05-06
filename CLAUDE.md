@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Critical Constraints
-
-**DO NOT USE SUBAGENT** - Direct tool usage is required for all operations.
-
 ## Project Overview
 
 Gin Template Backend - A production-ready Golang REST API backend template using Gin framework, PostgreSQL, and layer-based architecture.
