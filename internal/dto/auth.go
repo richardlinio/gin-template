@@ -1,9 +1,8 @@
 package dto
 
 type UserInfo struct {
-	ID         int64  `json:"id"`
-	Username   string `json:"username"`
-	Experience int32  `json:"experience"`
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
 }
 
 type RegisterRequest struct {
@@ -35,13 +34,12 @@ type LoginResponse struct {
 }
 
 // ToLoginResponse converts login result to DTO
-func ToLoginResponse(accessToken string, userID int64, username string, experience int32) LoginResponse {
+func ToLoginResponse(accessToken string, userID int64, username string) LoginResponse {
 	return LoginResponse{
 		AccessToken: accessToken,
 		User: UserInfo{
-			ID:         userID,
-			Username:   username,
-			Experience: experience,
+			ID:       userID,
+			Username: username,
 		},
 	}
 }
@@ -63,13 +61,12 @@ type RefreshResponse struct {
 }
 
 // ToRefreshResponse converts refresh result to DTO
-func ToRefreshResponse(accessToken string, userID int64, username string, experience int32) RefreshResponse {
+func ToRefreshResponse(accessToken string, userID int64, username string) RefreshResponse {
 	return RefreshResponse{
 		AccessToken: accessToken,
 		User: UserInfo{
-			ID:         userID,
-			Username:   username,
-			Experience: experience,
+			ID:       userID,
+			Username: username,
 		},
 	}
 }

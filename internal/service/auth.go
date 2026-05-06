@@ -53,9 +53,8 @@ type LoginResult struct {
 	RefreshToken       string
 	RefreshTokenExpire time.Time
 	// User information fields
-	UserID     int64
-	Username   string
-	Experience int32
+	UserID   int64
+	Username string
 }
 
 // NewAuthService creates a new AuthService instance.

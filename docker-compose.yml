@@ -10,7 +10,7 @@ services:
       # Database connection
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-myapp}
+      - DB_NAME=${DB_NAME:-gin_template_dev}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
       - DB_SSLMODE=disable
@@ -32,22 +32,22 @@ services:
       - JWT_REFRESH_TOKEN_TIMEOUT=${JWT_REFRESH_TOKEN_TIMEOUT:-168h}
       - JWT_ACCESS_TOKEN_COOKIE_NAME=${JWT_ACCESS_TOKEN_COOKIE_NAME:-access_token}
       - JWT_REFRESH_TOKEN_COOKIE_NAME=${JWT_REFRESH_TOKEN_COOKIE_NAME:-refresh_token}
-      - JWT_COOKIE_PATH=${JWT_COOKIE_PATH:-/}
+      - JWT_REFRESH_COOKIE_PATH=${JWT_REFRESH_COOKIE_PATH:-/api/auth/refresh}
       - JWT_COOKIE_DOMAIN=${JWT_COOKIE_DOMAIN:-}
-      - JWT_COOKIE_SECURE=${JWT_COOKIE_SECURE:-false}
-      - JWT_REALM=${JWT_REALM:-My App}
+      - JWT_SECURE_COOKIE=${JWT_SECURE_COOKIE:-false}
+      - JWT_REALM=${JWT_REALM:-API}
 
       # Logger configuration
-      - LOGGER_LEVEL=${LOGGER_LEVEL:-debug}
-      - LOGGER_FORMAT=${LOGGER_FORMAT:-text}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - LOG_FORMAT=${LOG_FORMAT:-text}
 
       # CORS configuration
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       - CORS_ALLOW_CREDENTIALS=${CORS_ALLOW_CREDENTIALS:-true}
-      - CORS_MAX_AGE=${CORS_MAX_AGE:-43200}
+      - CORS_MAX_AGE_SECONDS=${CORS_MAX_AGE_SECONDS:-3600}
 
       # Rate limiting
-      - RATE_LIMIT_ENABLE=${RATE_LIMIT_ENABLE:-true}
+      - RATE_LIMIT_ENABLED=${RATE_LIMIT_ENABLED:-true}
       - RATE_LIMIT_REQUESTS_PER_MINUTE=${RATE_LIMIT_REQUESTS_PER_MINUTE:-60}
       - RATE_LIMIT_WINDOW_DURATION=${RATE_LIMIT_WINDOW_DURATION:-1m}
       - RATE_LIMIT_CLEANUP_INTERVAL=${RATE_LIMIT_CLEANUP_INTERVAL:-5m}
@@ -73,7 +73,7 @@ services:
     image: postgres:16-alpine
     restart: always
     environment:
-      - POSTGRES_DB=${DB_NAME:-myapp}
+      - POSTGRES_DB=${DB_NAME:-gin_template_dev}
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
     ports:
@@ -81,7 +81,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-myapp}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gin_template_dev}"]
       interval: 5s
       timeout: 5s
       retries: 5

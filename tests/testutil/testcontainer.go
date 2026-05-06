@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	TestDBName     = "waterballsa_test"
+	TestDBName     = "gin_template_test"
 	TestDBUser     = "test_user"
 	TestDBPassword = "test_password"
 )

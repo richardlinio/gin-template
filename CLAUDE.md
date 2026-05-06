@@ -119,7 +119,7 @@ Migrations use Goose format with `-- +goose Up` and `-- +goose Down` directives:
 
 - Filenames: `NNN_description.sql` (e.g., `001_create_users_table.sql`)
 - Location: `migrations/` directory
-- Schema includes: users, access_tokens (JWT blacklist), courses module tables
+- Schema includes: users, refresh_tokens (JWT refresh token rotation)
 
 ### Router and Handlers
 
@@ -253,7 +253,7 @@ Follow these 5 steps to add a new error type:
 
 ```go
 const (
-    CodeCourseNotFound = "ERR_COURSE_NOT_FOUND"
+    CodeResourceNotFound = "ERR_RESOURCE_NOT_FOUND"
 )
 ```
 
@@ -261,7 +261,7 @@ const (
 
 ```go
 var errorMessages = map[string]string{
-    CodeCourseNotFound: "課程不存在",
+    CodeResourceNotFound: "資源不存在",
 }
 ```
 
@@ -269,15 +269,15 @@ var errorMessages = map[string]string{
 
 ```go
 var httpStatusMap = map[string]int{
-    CodeCourseNotFound: http.StatusNotFound,
+    CodeResourceNotFound: http.StatusNotFound,
 }
 ```
 
 **Step 4:** Create constructor function in [internal/apperror/error.go](internal/apperror/error.go):
 
 ```go
-func CourseNotFound() *AppError {
-    return New(CodeCourseNotFound)
+func ResourceNotFound() *AppError {
+    return New(CodeResourceNotFound)
 }
 ```
 
@@ -285,7 +285,7 @@ func CourseNotFound() *AppError {
 
 ```go
 if !exists {
-    return apperror.CourseNotFound()
+    return apperror.ResourceNotFound()
 }
 ```
 
@@ -304,7 +304,7 @@ Error logging is **automatic** via the error handler middleware:
 - Unit tests use `_test.go` suffix
 - CI runs tests with race detector: `go test -v -race ./...`
 - Config package has test coverage for environment variable parsing
-- BDD test structure exists in `tests/features/` and `tests/steps/` (currently empty)
+- BDD test structure exists in `tests/bdd/features/` (DSL + ISA layers) and `tests/bdd/steps/`
 
 ## Development Workflow
 
@@ -347,12 +347,12 @@ Examples:
 // Preferred ✓
 authService
 userRepository
-courseRepository
+refreshTokenRepository
 
 // Avoid ✗
 authSvc
 userRepo
-courseRepo
+refreshTokenRepo
 ```
 
 When implementing these features, follow the layer-based architecture and maintain consistency with existing patterns.

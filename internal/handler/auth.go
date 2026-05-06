@@ -93,7 +93,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	h.setAccessTokenCookie(c, result.AccessToken, result.AccessTokenExpire)
 	h.setRefreshTokenCookie(c, result.RefreshToken, result.RefreshTokenExpire)
 
-	response := dto.ToLoginResponse(result.AccessToken, result.UserID, result.Username, result.Experience)
+	response := dto.ToLoginResponse(result.AccessToken, result.UserID, result.Username)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -137,7 +137,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	h.setAccessTokenCookie(c, result.AccessToken, result.AccessTokenExpire)
 	h.setRefreshTokenCookie(c, result.RefreshToken, result.RefreshTokenExpire)
 
-	response := dto.ToRefreshResponse(result.AccessToken, result.UserID, result.Username, result.Experience)
+	response := dto.ToRefreshResponse(result.AccessToken, result.UserID, result.Username)
 	c.JSON(http.StatusOK, response)
 }
 

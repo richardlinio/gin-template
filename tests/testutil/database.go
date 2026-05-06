@@ -35,11 +35,10 @@ func CreateTestUser(ctx context.Context, pool *pgxpool.Pool, username, password 
 		return 0, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Insert user into database
-	// Using default role 'STUDENT' and initial values for experience_points (0) and level (1)
+	// Insert user into database with default role
 	query := `
-		INSERT INTO users (username, password_hash, role, experience_points, level)
-		VALUES ($1, $2, 'STUDENT', 0, 1)
+		INSERT INTO users (username, password_hash)
+		VALUES ($1, $2)
 		RETURNING id
 	`
 

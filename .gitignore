@@ -33,3 +33,6 @@ go.work.sum
 
 # AI config
 .claude/
+
+# OS
+.DS_Store

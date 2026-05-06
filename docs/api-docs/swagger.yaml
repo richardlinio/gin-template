@@ -9,7 +9,7 @@ info:
     - User registration and login
     - Access token (short-lived) + Refresh token (long-lived)
     - **Cookie-based token storage** for security
-    - Token blacklist for logout functionality
+    - Refresh token rotation and revocation on logout
     - Health check endpoint for monitoring
 
     Perfect for starting new backend projects with authentication built-in.
@@ -176,7 +176,6 @@ paths:
                 user:
                   id: 1
                   username: "user123"
-                  experience: 0
         '400':
           description: Validation failed - missing username or password
           content:
@@ -218,7 +217,7 @@ paths:
     post:
       summary: User logout
       description: |
-        Invalidate current tokens (add to blacklist) and clear token cookies.
+        Revoke the refresh token and clear token cookies.
 
         **Note:** This endpoint can be called even if the tokens are already expired or invalid. It will gracefully handle missing or invalid tokens.
 
@@ -298,7 +297,6 @@ paths:
                 user:
                   id: 1
                   username: "user123"
-                  experience: 0
         '401':
           description: Invalid or expired refresh token, or refresh token missing
           content:
@@ -454,15 +452,9 @@ components:
           type: string
           description: Username
           example: "user123"
-        experience:
-          type: integer
-          format: int32
-          description: User experience points
-          example: 0
       required:
         - id
         - username
-        - experience
 
     RefreshResponse:
       type: object

@@ -38,7 +38,6 @@ Feature: Refresh Token API Implementation
     And the response body should contain field "accessToken"
     And the response body should contain field "user.id"
     And the response body should contain field "user.username"
-    And the response body should contain field "user.experience"
 
     # Verification: Response values
     And the response body field "user.username" should equal string "Alice"

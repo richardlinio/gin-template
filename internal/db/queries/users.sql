@@ -1,10 +1,10 @@
 -- name: CreateUser :one
-INSERT INTO users (username, password_hash, role, experience_points, level)
-VALUES ($1, $2, 'STUDENT', 0, 1)
+INSERT INTO users (username, password_hash)
+VALUES ($1, $2)
 RETURNING id;
 
 -- name: GetUserByUsername :one
-SELECT id, username, password_hash, role, experience_points, level, created_at, updated_at
+SELECT id, username, password_hash, role, created_at, updated_at
 FROM users
 WHERE username = $1 AND deleted_at IS NULL;
 
@@ -15,6 +15,6 @@ SELECT EXISTS(
 );
 
 -- name: GetUserByID :one
-SELECT id, username, password_hash, role, experience_points, level, created_at, updated_at
+SELECT id, username, password_hash, role, created_at, updated_at
 FROM users
 WHERE id = $1 AND deleted_at IS NULL;

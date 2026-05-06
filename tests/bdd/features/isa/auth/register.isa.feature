@@ -90,7 +90,7 @@ Feature: User Registration API Implementation
     Given I set request body to:
       """
       {
-        "username": "alice_chen_waterball_student_learning_java_202512",
+        "username": "user_with_a_very_long_username_for_template_test_5",
         "password": "Strong123!"
       }
       """
@@ -187,7 +187,7 @@ Feature: User Registration API Implementation
     Given I set request body to:
       """
       {
-        "username": "frank_johnson_waterball_student_learning_python_2025",
+        "username": "user_with_a_very_long_username_for_template_tests51",
         "password": "Valid123!"
       }
       """

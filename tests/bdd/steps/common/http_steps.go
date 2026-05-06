@@ -179,7 +179,7 @@ func theResponseBodyFieldShouldEqualString(ctx context.Context, fieldName, expec
 }
 
 // theResponseBodyFieldShouldEqualNumber asserts that a response field equals a specific number value
-// Supports nested field access using dot notation (e.g., "user.experience")
+// Supports nested field access using dot notation (e.g., "user.id")
 func theResponseBodyFieldShouldEqualNumber(ctx context.Context, fieldName string, expectedValue float64) error {
 	body, ok := ctx.Value(testcontext.ContextKeyResponseBody).([]byte)
 	if !ok {

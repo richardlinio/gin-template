@@ -171,8 +171,8 @@ All configuration is loaded from environment variables. See [.env.example](.env.
 
 The template includes a minimal authentication schema:
 
-- `users` - User accounts with roles and experience system
-- `access_tokens` - JWT token blacklist for logout functionality
+- `users` - User accounts with role-based access control (USER, ADMIN)
+- `refresh_tokens` - JWT refresh token storage with rotation and revocation
 
 View full ERD in [docs/db-schema.dbml](docs/db-schema.dbml)
 

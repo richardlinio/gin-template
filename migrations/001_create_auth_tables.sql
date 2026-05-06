@@ -6,7 +6,7 @@ CREATE TABLE
         id BIGSERIAL PRIMARY KEY,
         username VARCHAR(50) NOT NULL,
         password_hash VARCHAR(72) NOT NULL,
-        ROLE user_role NOT NULL DEFAULT 'USER',
+        role user_role NOT NULL DEFAULT 'USER',
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
         deleted_at TIMESTAMP NULL
