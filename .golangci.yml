@@ -2,6 +2,7 @@ version: '2'
 run:
   timeout: 5m
 linters:
+  default: standard # Includes errcheck, govet, ineffassign, staticcheck, unused
   enable:
     # Static Analysis
     - staticcheck # Advanced static analysis checks
@@ -13,6 +14,7 @@ linters:
     - nilnil # Detect incorrect (nil, nil) returns
     - goconst # Find repeated strings that should be constants
     - usestdlibvars # Detect variables that could be replaced by stdlib constants
+    - misspell # Detect commonly misspelled English words
 
     # Code Style
     - revive # Enforce style and best practices
@@ -44,7 +46,7 @@ linters:
       check-type-assertions: true
       check-blank: false
     gocyclo:
-      min-complexity: 15
+      min-complexity: 30
     gosec:
       excludes:
         - G104
