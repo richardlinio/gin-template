@@ -58,7 +58,7 @@ docker-build: ## Rebuild docker images from scratch (no cache)
 .PHONY: fmt
 fmt: ## Format Go code (gofumpt) and SQL files (pg_format)
 	$(DOCKER_EXEC) gofumpt -l -w .
-	$(DOCKER_EXEC) sh -c 'find migrations internal/db/queries -name "*.sql" -print0 | xargs -0 -r pg_format --config /app/.pg_format --inplace --multiline --placeholder "-- \+goose StatementBegin[\s\S]*?-- \+goose StatementEnd\n+"'
+	$(DOCKER_EXEC) sh -c 'find migrations internal/db/queries -name "*.sql" -print0 | xargs -0 -r pg_format --config /app/.pg_format --inplace --multiline --placeholder "-- \+goose StatementBegin[\s\S]*?-- \+goose StatementEnd\n*"'
 
 .PHONY: lint
 lint: ## Compile-check the build, then run golangci-lint
@@ -66,8 +66,8 @@ lint: ## Compile-check the build, then run golangci-lint
 	$(DOCKER_EXEC) golangci-lint run
 
 .PHONY: test
-test: ## Run all Go tests
-	$(DOCKER_EXEC) go test ./...
+test: ## Run all Go tests with race detector
+	$(DOCKER_EXEC) go test -race ./...
 
 .PHONY: tidy
 tidy: ## Tidy go.mod / go.sum

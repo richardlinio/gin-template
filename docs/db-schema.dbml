@@ -14,7 +14,7 @@ Table users {
   id bigserial [primary key]
   username varchar(50) [not null, unique, note: 'Username: alphanumeric with length constraints']
   password_hash varchar(72) [not null, note: 'Bcrypt password hash']
-  role user_role [not null, default: 'USER', note: 'User role']
+  account_role user_role [not null, default: 'USER', note: 'User role']
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp [not null, default: `now()`]
   deleted_at timestamp [null, note: 'Soft delete timestamp']
