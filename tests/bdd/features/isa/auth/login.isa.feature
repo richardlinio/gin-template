@@ -11,9 +11,8 @@ Feature: User Login API Implementation
   Scenario: Successful login with valid credentials
     # Setup: Create test user directly in database
     Given the database has a user:
-      | username   | Alice       |
-      | password   | Test1234!   |
-      | experience | 0           |
+      | username | Alice     |
+      | password | Test1234! |
 
     # Setup: Prepare login request body
     And I set request body to:
@@ -40,11 +39,9 @@ Feature: User Login API Implementation
     And the response body should contain field "accessToken"
     And the response body should contain field "user.id"
     And the response body should contain field "user.username"
-    And the response body should contain field "user.experience"
 
     # Verification: Response values
     And the response body field "user.username" should equal string "Alice"
-    And the response body field "user.experience" should equal number 0
 
   Scenario: Failed login with wrong password
     # Setup: Create test user
@@ -69,7 +66,7 @@ Feature: User Login API Implementation
 
     # Verification: Error response
     And the response body should contain field "error"
-    And the response body field "error" should equal string "使用者名稱或密碼無效"
+    And the response body field "error" should equal string "Invalid username or password"
 
   Scenario: Failed login with non-existent username
     # No setup needed - user doesn't exist
@@ -91,4 +88,4 @@ Feature: User Login API Implementation
 
     # Verification: Error response
     And the response body should contain field "error"
-    And the response body field "error" should equal string "使用者名稱或密碼無效"
+    And the response body field "error" should equal string "Invalid username or password"

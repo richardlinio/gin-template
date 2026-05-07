@@ -59,7 +59,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.7.2
+          version: v2.12.2
           args: --config .golangci.yml
 
   generated-code:
@@ -98,7 +98,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/go/bin
-          key: ${{ runner.os }}-go-tools-sqlc-v1.30.0
+          key: ${{ runner.os }}-go-tools-sqlc-v1.31.1
           restore-keys: |
             ${{ runner.os }}-go-tools-sqlc-
 
@@ -107,7 +107,7 @@ jobs:
         if: steps.check-sqlc.outputs.enabled == 'true'
         run: |
           if ! command -v sqlc &> /dev/null; then
-            go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
+            go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
           fi
 
       - name: Check generated code is in sync

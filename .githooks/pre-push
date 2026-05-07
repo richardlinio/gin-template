@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# pre-push: run `make lint` before allowing the push to proceed.
+# Aborts the push if lint fails so broken code never reaches the remote.
+
+set -euo pipefail
+
+make lint

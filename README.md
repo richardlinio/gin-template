@@ -2,6 +2,8 @@
 
 A production-ready backend template built with Go Gin framework and PostgreSQL, featuring a complete JWT authentication system.
 
+> **For contributors / AI agents**: architectural rules (MUST / NEVER) are defined in [`docs/constitution.md`](./docs/constitution.md). Development workflow and AI-agent preferences are in [`CLAUDE.md`](./CLAUDE.md).
+
 ## Features
 
 - ✅ **JWT Authentication** - Complete auth system (register, login, logout, refresh token)
@@ -17,7 +19,7 @@ A production-ready backend template built with Go Gin framework and PostgreSQL, 
 
 ## Tech Stack
 
-- **Language**: Go 1.25.5
+- **Language**: Go
 - **Framework**: Gin
 - **Database**: PostgreSQL 17
 - **DB Driver**: pgx/v5
@@ -98,8 +100,8 @@ make fmt
 # Run linter
 make lint
 
-# Build the application
-make build
+# Rebuild docker images from scratch
+make docker-build
 
 # Run tests
 make test
@@ -110,6 +112,22 @@ make migrate-up        # Run pending migrations
 make migrate-down      # Rollback last migration
 make migrate-reset     # Reset database (drop all + re-run)
 ```
+
+### Git Hooks
+
+This repo ships opt-in git hooks under `.githooks/`:
+
+- `pre-commit` runs `make fmt` and re-stages the formatted files automatically — no follow-up "style" commit needed.
+- `pre-push` runs `make lint` and aborts the push if anything fails.
+
+Enable them once per clone:
+
+```bash
+make hooks-install     # sets core.hooksPath=.githooks
+make hooks-uninstall   # opt out again
+```
+
+Both hooks shell out to `make`, which uses `docker compose exec backend`, so the `backend` service must be up (`make up`) before committing or pushing.
 
 ### API Endpoints
 
@@ -153,8 +171,9 @@ Add new features following the layer-based architecture:
 4. Implement service in `internal/service/`
 5. Create handler in `internal/handler/`
 6. Register routes in `internal/router/router.go`
+7. Wire dependencies in `internal/app/app.go` `New()` (NEVER in `init()` or globals)
 
-See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
+See [`docs/constitution.md`](./docs/constitution.md) for architectural rules and [`CLAUDE.md`](./CLAUDE.md) for development workflow.
 
 ## Configuration
 
@@ -171,8 +190,8 @@ All configuration is loaded from environment variables. See [.env.example](.env.
 
 The template includes a minimal authentication schema:
 
-- `users` - User accounts with roles and experience system
-- `access_tokens` - JWT token blacklist for logout functionality
+- `users` - User accounts with role-based access control (USER, ADMIN)
+- `refresh_tokens` - JWT refresh token storage with rotation and revocation
 
 View full ERD in [docs/db-schema.dbml](docs/db-schema.dbml)
 
@@ -184,7 +203,7 @@ The application uses a unified error handling system with centralized middleware
 - **Automatic logging** based on error severity
 - **Validation error details** for client-side form handling
 
-See [CLAUDE.md](CLAUDE.md) for error handling guidelines.
+Error handling is governed by [`docs/constitution.md`](./docs/constitution.md) §II (the error contract MUST be followed). Step-by-step workflow for adding new error types is in [`CLAUDE.md`](./CLAUDE.md) and [`docs/constitution.md`](./docs/constitution.md) Appendix A.
 
 ## Testing
 
@@ -213,4 +232,6 @@ MIT License - feel free to use this template for any project.
 
 ## Support
 
-For issues or questions, please check [CLAUDE.md](CLAUDE.md) for development guidelines.
+- Architectural rules: [`docs/constitution.md`](./docs/constitution.md)
+- Development workflow: [`CLAUDE.md`](./CLAUDE.md)
+- API reference: [`docs/api-docs/swagger.yaml`](./docs/api-docs/swagger.yaml)

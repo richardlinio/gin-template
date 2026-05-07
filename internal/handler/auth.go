@@ -68,7 +68,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	message := "註冊成功"
+	message := "Registration successful"
 	response := dto.ToRegisterResponse(message, userID)
 	c.JSON(http.StatusCreated, response)
 }
@@ -93,7 +93,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	h.setAccessTokenCookie(c, result.AccessToken, result.AccessTokenExpire)
 	h.setRefreshTokenCookie(c, result.RefreshToken, result.RefreshTokenExpire)
 
-	response := dto.ToLoginResponse(result.AccessToken, result.UserID, result.Username, result.Experience)
+	response := dto.ToLoginResponse(result.AccessToken, result.UserID, result.Username)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -113,7 +113,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	h.clearAccessTokenCookie(c)
 	h.clearRefreshTokenCookie(c)
 
-	message := "登出成功"
+	message := "Logout successful"
 	response := dto.ToLogoutResponse(message)
 	c.JSON(http.StatusOK, response)
 }
@@ -137,7 +137,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	h.setAccessTokenCookie(c, result.AccessToken, result.AccessTokenExpire)
 	h.setRefreshTokenCookie(c, result.RefreshToken, result.RefreshTokenExpire)
 
-	response := dto.ToRefreshResponse(result.AccessToken, result.UserID, result.Username, result.Experience)
+	response := dto.ToRefreshResponse(result.AccessToken, result.UserID, result.Username)
 	c.JSON(http.StatusOK, response)
 }
 

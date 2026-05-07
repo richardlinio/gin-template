@@ -1,358 +1,76 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> **本檔角色**：給 Claude Code / AI agent 的開發 workflow 與偏好。
+>
+> **三檔分工**：
+> - 架構鐵律（MUST / NEVER） → [`docs/constitution.md`](./docs/constitution.md)
+> - 專案介紹、啟動指引、目錄結構、API 端點、commands → [`README.md`](./README.md)
+> - Workflow 步驟與 agent 偏好 → 本檔
 
-## Critical Constraints
+**動手前 MUST 先讀** [`docs/constitution.md`](./docs/constitution.md) 七條核心原則。本檔為其補充，不重複條文。
 
-**DO NOT USE SUBAGENT** - Direct tool usage is required for all operations.
+---
 
-## Project Overview
+## Workflow：新增功能
 
-Gin Template Backend - A production-ready Golang REST API backend template using Gin framework, PostgreSQL, and layer-based architecture.
+依層次由內而外建立檔案（呼應 constitution §I 分層）：
 
-- **Go Version**: 1.25.5
-- **Main Framework**: Gin (HTTP server)
-- **Database**: PostgreSQL with pgx/v5 driver
-- **Migration Tool**: Goose
-- **Development**: Docker-based with Air for hot reload
+1. 在 `internal/dto/` 定義 request / response struct
+2. 視需求在 `internal/model/` 加 domain model
+3. 在 `internal/repository/` 建 repository（含 sentinel error，遵守 §VII）
+4. 在 `internal/service/` 寫業務邏輯（service 內定義本地 interface 取用 repository，遵守 §I）
+5. 在 `internal/handler/` 寫 HTTP 層（錯誤一律 `c.Error(err)` + `return`，遵守 §II）
+6. 在 `internal/router/router.go` 註冊路由
+7. 在 `internal/app/app.go` 的 `New()` 完成依賴組裝（NEVER 在各層 `init()` 或全域變數做 DI）
 
-## Common Commands
+---
 
-All commands below run inside Docker containers. Ensure Docker is running and containers are up before executing.
+## Workflow：新增 Error Type
 
-### Development
+完整 5 步驟見 [`docs/constitution.md`](./docs/constitution.md) 附錄 A。捷徑：開 [`internal/apperror/codes.go`](./internal/apperror/codes.go) 找一個現有條目當範本，依樣修改 4 個檔案（codes / messages / status / error）。
+
+新 code **MUST** 插入對應 HTTP status section（400/401/.../503 升序）。
+
+---
+
+## Workflow：Database 變更
+
+1. 建立 migration：`migrations/NNN_description.sql`，**MUST** 同時寫 `-- +goose Up` 與 `-- +goose Down`（遵守 §V）
+2. 跑 migration：`make migrate-up`
+3. 確認狀態：`make migrate-status`
+4. 若使用 sqlc：在 `internal/db/queries/*.sql` 寫查詢，再 `make sqlc` 產出型別安全程式碼
+
+---
+
+## Workflow：新增 Middleware
+
+1. 在 `internal/middleware/` 建 function，回傳 `gin.HandlerFunc`
+2. 若需設定，在 `internal/config/` 加 config struct（遵守 §III pass-by-value）
+3. 在 `router.Setup()` 中按執行順序註冊（cors → recovery → logger → ratelimit → auth → error_handler 依序而下）
+4. 若新增環境變數，同步更新 `.env.example`
+
+---
+
+## Commit 前自我檢查
+
+提交前 **MUST** 執行（任一失敗禁止 commit，遵守 §VI）：
 
 ```bash
-# Format code
-make fmt
-
-# Run linter (includes Go build verification)
-make lint
-
-# Run all tests (inside Docker)
-make test
-
-# Start Docker containers
-make up
-
-# Stop Docker containers and remove volumes
-make down
-
-# Rebuild Docker images from scratch
-make build
+make fmt    # gofumpt 格式化
+make lint   # golangci-lint + go build
+make test   # 含 race detector
 ```
 
-### Database Migrations
+---
 
-```bash
-# Check migration status
-make migrate-status
+## 命名（呼應 §IV）
 
-# Run pending migrations
-make migrate-up
+寫新識別字時 **MUST** 用完整單字：`authService` ✓ / `authSvc` ✗。允許 `ctx` / `cfg` / `err` / `req` / `resp` / `db` / `tx` 等 Go 標準縮寫。
 
-# Rollback last migration
-make migrate-down
+---
 
-# Reset database (drop all + re-run migrations)
-make migrate-reset
-```
+## Tests
 
-## Architecture
-
-### Layer-Based Structure
-
-The codebase follows a clean layer-based architecture with clear separation of concerns:
-
-```
-cmd/server/          → Application entry point (main.go)
-internal/
-├── app/             → Application lifecycle management (initialization, graceful shutdown)
-├── config/          → Configuration loading from environment variables
-├── handler/         → HTTP request handlers (presentation layer)
-├── service/         → Business logic layer
-├── repository/      → Data access layer (interacts with database)
-├── dto/             → Data Transfer Objects (API request/response structures)
-├── model/           → Domain models (database entities)
-├── middleware/      → HTTP middleware (e.g., authentication, logging)
-├── router/          → Route definitions and setup
-├── validator/       → Custom validation logic
-├── util/            → Utility functions and helpers
-└── infrastructure/  → Infrastructure concerns
-    ├── database/    → Database connection pooling (pgxpool)
-    ├── logger/      → Structured logging (slog)
-    └── server/      → HTTP server configuration
-```
-
-### Configuration Management
-
-Configuration is loaded exclusively from environment variables (see [.env.example](.env.example)):
-
-- **Server Config**: Port, host, timeouts (read, write, shutdown, request)
-- **Database Config**: Host, port, user, password, dbname, connection pool settings
-- **Logger Config**: Level (debug/info/warn/error), format (json/text)
-- **CORS Config**: Allowed origins, credentials, max age
-- **JWT Config**: Secret key, token timeouts, cookie settings (names, paths, domain, secure flag), realm
-
-All config structs are in `internal/config/` with dedicated files:
-
-- [config.go](internal/config/config.go) - Main config struct and loader
-- [server.go](internal/config/server.go) - Server config
-- [database.go](internal/config/database.go) - Database config
-- [logger.go](internal/config/logger.go) - Logger config
-- [cors.go](internal/config/cors.go) - CORS config
-- [jwt.go](internal/config/jwt.go) - JWT config
-
-**Adding New Config:**
-
-When adding new configuration, maintain consistency with pass-by-value pattern:
-
-- Loader functions return values, not pointers: `func loadXxxConfig() (XxxConfig, error)`
-- Config struct stores values: `type Config struct { Xxx XxxConfig }`
-- Functions receive values: `func NewHandler(cfg config.XxxConfig)`
-
-This expresses config immutability and ensures consistent behavior across the codebase.
-
-#### Migration Files
-
-Migrations use Goose format with `-- +goose Up` and `-- +goose Down` directives:
-
-- Filenames: `NNN_description.sql` (e.g., `001_create_users_table.sql`)
-- Location: `migrations/` directory
-- Schema includes: users, access_tokens (JWT blacklist), courses module tables
-
-### Router and Handlers
-
-Routes are registered in [internal/router/router.go](internal/router/router.go):
-
-Handler pattern:
-
-- Each handler is a struct with dependencies (pool, logger, timeout)
-- Constructor function `NewXxxHandler()` for dependency injection
-- Methods are Gin handler functions with signature `func(c *gin.Context)`
-
-### Middleware
-
-The application uses middleware in a specific order to ensure correct behavior:
-
-**Adding New Middleware:**
-
-1. Create middleware function in `internal/middleware/` returning `gin.HandlerFunc`
-2. Add middleware configuration to `internal/config/` if needed
-3. Register middleware in `router.Setup()` in the appropriate order
-4. Update `.env.example` with any new environment variables
-
-### Error Handling
-
-The application uses a **unified error handling system** with centralized middleware to ensure consistent error responses and logging.
-
-#### Architecture
-
-**Error Flow:**
-
-```
-Handler → Service → Repository
-         ↓ returns AppError
-      Middleware intercepts and responds with JSON
-```
-
-**Package Structure:**
-
-```
-internal/apperror/
-├── error.go      → AppError struct and constructor functions
-├── codes.go      → Error code constants (ERR_*)
-├── messages.go   → Chinese error messages
-└── status.go     → HTTP status code mappings
-
-internal/middleware/
-└── error_handler.go → Centralized error handling and logging
-```
-
-#### Error Response Format
-
-All error responses follow this JSON structure:
-
-```json
-{
-	"code": "ERR_USERNAME_EXISTS",
-	"error": "使用者名稱已存在",
-	"details": {
-		"Username": "長度至少需要 3 個字元"
-	}
-}
-```
-
-- `code`: Error code constant (e.g., `ERR_USERNAME_EXISTS`)
-- `error`: User-friendly Chinese error message
-- `details`: Optional field for validation error details (field-level errors)
-
-#### How to Use in Code
-
-**In Service Layer:**
-
-Services should return `*apperror.AppError` for all business logic errors:
-
-```go
-// Return predefined errors
-if exists {
-    return 0, apperror.UsernameExists()
-}
-
-// Wrap underlying errors (database, internal errors)
-if err != nil {
-    return 0, apperror.DatabaseError(err)
-}
-```
-
-**In Handler Layer:**
-
-Handlers should **NOT** manually create JSON responses. Instead, pass errors to middleware using `c.Error()`:
-
-```go
-// For validation errors
-if err := c.ShouldBindJSON(&req); err != nil {
-    _ = c.Error(apperror.NewWithError(apperror.CodeValidationFailed, err))
-    return
-}
-
-// For service errors (service already returns AppError)
-if err := h.service.SomeMethod(ctx, req); err != nil {
-    _ = c.Error(err)
-    return
-}
-```
-
-**Key Pattern:**
-
-- ✅ Service returns `*apperror.AppError`
-- ✅ Handler calls `c.Error(err)` and returns early
-- ✅ Middleware automatically creates JSON response
-- ❌ DO NOT manually call `c.JSON()` for errors in handlers
-
-#### Error Code Organization
-
-Error codes in all three files (`codes.go`, `messages.go`, `status.go`) **must be organized by HTTP status code** in ascending order:
-
-- 400 (Bad Request)
-- 401 (Unauthorized)
-- 403 (Forbidden)
-- 404 (Not Found)
-- 409 (Conflict)
-- 429 (Too Many Requests)
-- 500 (Internal Server Error)
-- 503 (Service Unavailable)
-
-This ensures consistency and makes error codes easier to locate and maintain.
-
-#### Adding New Error Types
-
-Follow these 5 steps to add a new error type:
-
-**Step 1:** Add error code constant in [internal/apperror/codes.go](internal/apperror/codes.go) **under the appropriate HTTP status code section**:
-
-```go
-const (
-    CodeCourseNotFound = "ERR_COURSE_NOT_FOUND"
-)
-```
-
-**Step 2:** Add error message in [internal/apperror/messages.go](internal/apperror/messages.go):
-
-```go
-var errorMessages = map[string]string{
-    CodeCourseNotFound: "課程不存在",
-}
-```
-
-**Step 3:** Map to HTTP status in [internal/apperror/status.go](internal/apperror/status.go):
-
-```go
-var httpStatusMap = map[string]int{
-    CodeCourseNotFound: http.StatusNotFound,
-}
-```
-
-**Step 4:** Create constructor function in [internal/apperror/error.go](internal/apperror/error.go):
-
-```go
-func CourseNotFound() *AppError {
-    return New(CodeCourseNotFound)
-}
-```
-
-**Step 5:** Use in service layer:
-
-```go
-if !exists {
-    return apperror.CourseNotFound()
-}
-```
-
-#### Logging
-
-Error logging is **automatic** via the error handler middleware:
-
-- **AppError with underlying error** (`Err` field set): Logs at ERROR level with underlying error details
-- **AppError without underlying error**: Logs at WARN level with code, message, status, path, method
-- **Unexpected errors** (non-AppError): Logs at ERROR level with full error details
-
-**No manual logging needed in handlers** - the middleware handles all error logging automatically.
-
-### Testing
-
-- Unit tests use `_test.go` suffix
-- CI runs tests with race detector: `go test -v -race ./...`
-- Config package has test coverage for environment variable parsing
-- BDD test structure exists in `tests/features/` and `tests/steps/` (currently empty)
-
-## Development Workflow
-
-### Adding a New Feature
-
-1. **Define DTOs** in `internal/dto/` for request/response structures
-2. **Add domain models** in `internal/model/` if needed
-3. **Create repository** in `internal/repository/` for data access
-4. **Implement service** in `internal/service/` for business logic
-5. **Create handler** in `internal/handler/` for HTTP layer
-6. **Register routes** in `internal/router/router.go`
-7. **Add middleware** in `internal/middleware/` if cross-cutting concerns needed
-
-### Database Changes
-
-1. **Create migration** in `migrations/NNN_description.sql`
-2. **Run migration**: `make migrate-up`
-3. **Verify status**: `make migrate-status`
-4. Using sqlc:
-   - Write SQL queries in `internal/db/queries/*.sql`
-   - Run `make sqlc` to create type-safe Go code
-
-### Code Quality
-
-- **Formatting**: Use `make fmt` (gofumpt) before commits
-- **Linting**: Use `make lint` (golangci-lint) - CI enforces this
-- **Testing**: Add tests for new code - CI runs with race detector
-- **Config**: `.golangci.yml` defines linting rules
-
-### Code Style
-
-**Naming Conventions:**
-
-- **Use full names instead of abbreviations** for better clarity and consistency
-- Variable names should be descriptive and avoid abbreviations
-
-Examples:
-
-```go
-// Preferred ✓
-authService
-userRepository
-courseRepository
-
-// Avoid ✗
-authSvc
-userRepo
-courseRepo
-```
-
-When implementing these features, follow the layer-based architecture and maintain consistency with existing patterns.
+- 測試檔 **MUST** 用 `_test.go` 後綴
+- 跑全測試：`make test`（CI 等同 `go test -v -race ./...`）
+- BDD 測試骨架在 `tests/bdd/features/`（DSL + ISA 兩層）與 `tests/bdd/steps/`

@@ -38,7 +38,6 @@ Feature: Refresh Token API Implementation
     And the response body should contain field "accessToken"
     And the response body should contain field "user.id"
     And the response body should contain field "user.username"
-    And the response body should contain field "user.experience"
 
     # Verification: Response values
     And the response body field "user.username" should equal string "Alice"
@@ -52,7 +51,7 @@ Feature: Refresh Token API Implementation
 
     # Verification: Error response
     And the response body should contain field "error"
-    And the response body field "error" should equal string "未授權或權杖無效"
+    And the response body field "error" should equal string "Unauthorized or invalid token"
 
   Scenario: Refresh with invalid token
     # Setup: Set invalid refresh token
@@ -66,7 +65,7 @@ Feature: Refresh Token API Implementation
 
     # Verification: Error response
     And the response body should contain field "error"
-    And the response body field "error" should equal string "未授權或權杖無效"
+    And the response body field "error" should equal string "Unauthorized or invalid token"
 
   Scenario: Token rotation - old token becomes invalid
     # Setup: Create test user and login to get initial refresh token
@@ -94,4 +93,4 @@ Feature: Refresh Token API Implementation
 
     # Verification: Old token should be invalid
     Then the response status code should be 401
-    And the response body field "error" should equal string "未授權或權杖無效"
+    And the response body field "error" should equal string "Unauthorized or invalid token"

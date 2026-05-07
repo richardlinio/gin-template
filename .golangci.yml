@@ -2,6 +2,7 @@ version: '2'
 run:
   timeout: 5m
 linters:
+  default: standard # Includes errcheck, govet, ineffassign, staticcheck, unused
   enable:
     # Static Analysis
     - staticcheck # Advanced static analysis checks
@@ -13,6 +14,7 @@ linters:
     - nilnil # Detect incorrect (nil, nil) returns
     - goconst # Find repeated strings that should be constants
     - usestdlibvars # Detect variables that could be replaced by stdlib constants
+    - misspell # Detect commonly misspelled English words
 
     # Code Style
     - revive # Enforce style and best practices
@@ -45,6 +47,11 @@ linters:
       check-blank: false
     gocyclo:
       min-complexity: 15
+    goconst:
+      # User-facing config strings (log level / format, SSL mode names) repeat
+      # at the package boundary by design. Lift the threshold so they don't
+      # force pseudo-constants like `levelInfo = "info"`.
+      min-occurrences: 6
     gosec:
       excludes:
         - G104
@@ -65,6 +72,10 @@ linters:
       - builtin$
       - examples$
       - internal/db # Exclude sqlc generated files
+    rules:
+      - path: _test\.go
+        linters:
+          - goconst
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

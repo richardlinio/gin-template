@@ -36,7 +36,8 @@ func ErrorHandler(logger *slog.Logger, jwtConfig config.JWTConfig) gin.HandlerFu
 		// Unexpected error - log full error and return generic error
 		if !errors.As(err, &appErr) {
 
-			logger.Error("Unexpected error",
+			logger.Error(
+				"Unexpected error",
 				"request_id", reqID,
 				"error", err,
 				"method", c.Request.Method,
@@ -54,7 +55,8 @@ func ErrorHandler(logger *slog.Logger, jwtConfig config.JWTConfig) gin.HandlerFu
 		}
 
 		// Custom error - log and return structured error
-		logger.Warn("Application error",
+		logger.Warn(
+			"Application error",
 			"request_id", reqID,
 			"code", appErr.Code,
 			"message", appErr.Message,
@@ -68,7 +70,8 @@ func ErrorHandler(logger *slog.Logger, jwtConfig config.JWTConfig) gin.HandlerFu
 
 		// If there's an underlying error, log it at error level
 		if appErr.Err != nil {
-			logger.Error("Underlying error",
+			logger.Error(
+				"Underlying error",
 				"request_id", reqID,
 				"error", appErr.Err,
 			)
@@ -106,16 +109,16 @@ func parseValidationErrors(err error) map[string]string {
 	return nil
 }
 
-// getValidationMessage returns Chinese error messages based on validation rules
+// getValidationMessage returns error messages based on validation rules
 func getValidationMessage(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
-		return "此欄位為必填"
+		return "This field is required"
 	case "min":
-		return fmt.Sprintf("長度至少需要 %s 個字元", fe.Param())
+		return fmt.Sprintf("Minimum length is %s characters", fe.Param())
 	case "max":
-		return fmt.Sprintf("長度不可超過 %s 個字元", fe.Param())
+		return fmt.Sprintf("Maximum length is %s characters", fe.Param())
 	default:
-		return "格式無效"
+		return "Invalid format"
 	}
 }

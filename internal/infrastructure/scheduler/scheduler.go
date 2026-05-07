@@ -33,7 +33,7 @@ func (s *Scheduler) Register(job Job) {
 }
 
 // Start begins running all registered jobs
-// It blocks until the context is cancelled
+// It blocks until the context is canceled
 func (s *Scheduler) Start(ctx context.Context) {
 	for _, job := range s.jobs {
 		go s.runJob(ctx, job)

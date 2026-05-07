@@ -31,5 +31,5 @@ go.work.sum
 .idea/
 .vscode/
 
-# AI config
-.claude/
+# OS
+.DS_Store

@@ -11,9 +11,8 @@ Feature: User Logout API Implementation
   Scenario: Logged-in user successfully logs out
     # Setup: Create test user directly in database
     Given the database has a user:
-      | username   | Alice     |
-      | password   | Test1234! |
-      | experience | 0         |
+      | username | Alice     |
+      | password | Test1234! |
 
     # Setup: Prepare login request body
     And I set request body to:
@@ -47,7 +46,7 @@ Feature: User Logout API Implementation
     And the response body should contain field "message"
 
     # Verification: Response values
-    And the response body field "message" should equal string "登出成功"
+    And the response body field "message" should equal string "Logout successful"
 
   Scenario: Non-logged-in user can logout without token
     # No setup needed - no user logged in
@@ -60,4 +59,4 @@ Feature: User Logout API Implementation
 
     # Verification: Response values
     And the response body should contain field "message"
-    And the response body field "message" should equal string "登出成功"
+    And the response body field "message" should equal string "Logout successful"
