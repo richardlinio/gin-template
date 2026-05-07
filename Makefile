@@ -73,3 +73,13 @@ build:
 .PHONY: down
 down:
 	docker compose down -v
+
+.PHONY: hooks-install
+hooks-install:
+	git config core.hooksPath .githooks
+	@echo "✓ git hooks enabled (core.hooksPath=.githooks)"
+
+.PHONY: hooks-uninstall
+hooks-uninstall:
+	git config --unset core.hooksPath
+	@echo "✓ git hooks disabled (core.hooksPath unset)"

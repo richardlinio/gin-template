@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# pre-commit: run `make fmt`, then re-stage every staged file so the commit
+# picks up the formatted version automatically (no follow-up "style: fmt" commit).
+#
+# Only files that were already staged get re-added — `git diff --cached` lists
+# exactly the staging set, so unrelated working-tree changes are left alone.
+# `--diff-filter=d` excludes deletions (you can't `git add` a deleted path).
+
+set -euo pipefail
+
+make fmt
+
+git diff -z --name-only --cached --diff-filter=d | xargs -0 -r git add --

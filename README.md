@@ -113,6 +113,22 @@ make migrate-down      # Rollback last migration
 make migrate-reset     # Reset database (drop all + re-run)
 ```
 
+### Git Hooks
+
+This repo ships opt-in git hooks under `.githooks/`:
+
+- `pre-commit` runs `make fmt` and re-stages the formatted files automatically — no follow-up "style" commit needed.
+- `pre-push` runs `make lint` and aborts the push if anything fails.
+
+Enable them once per clone:
+
+```bash
+make hooks-install     # sets core.hooksPath=.githooks
+make hooks-uninstall   # opt out again
+```
+
+Both hooks shell out to `make`, which uses `docker compose exec backend`, so the `backend` service must be up (`make up`) before committing or pushing.
+
 ### API Endpoints
 
 **Health Check**
