@@ -21,7 +21,7 @@ A production-ready backend template built with Go Gin framework and PostgreSQL, 
 
 - **Language**: Go
 - **Framework**: Gin
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL 17
 - **DB Driver**: pgx/v5
 - **Migration Tool**: Goose
 - **Authentication**: JWT (gin-jwt)

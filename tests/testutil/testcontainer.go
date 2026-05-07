@@ -63,7 +63,7 @@ func NewPostgresContainer(ctx context.Context) (*PostgresContainer, error) {
 	// Start PostgreSQL container with initialization scripts
 	postgresContainer, err := postgres.Run(
 		ctx,
-		"postgres:16-alpine",
+		"postgres:17-alpine",
 		postgres.WithDatabase(TestDBName),
 		postgres.WithUsername(TestDBUser),
 		postgres.WithPassword(TestDBPassword),
