@@ -47,6 +47,11 @@ linters:
       check-blank: false
     gocyclo:
       min-complexity: 15
+    goconst:
+      # User-facing config strings (log level / format, SSL mode names) repeat
+      # at the package boundary by design. Lift the threshold so they don't
+      # force pseudo-constants like `levelInfo = "info"`.
+      min-occurrences: 6
     gosec:
       excludes:
         - G104

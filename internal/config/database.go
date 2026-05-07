@@ -7,15 +7,7 @@ import (
 	"time"
 )
 
-const (
-	sslModeDisable    = "disable"
-	sslModeAllow      = "allow"
-	sslModePrefer     = "prefer"
-	sslModeRequire    = "require"
-	sslModeVerifyCA   = "verify-ca"
-	sslModeVerifyFull = "verify-full"
-	defaultSSLMode    = sslModeDisable
-)
+const defaultSSLMode = "disable"
 
 // DatabaseConfig holds database connection configuration
 type DatabaseConfig struct {
@@ -48,16 +40,15 @@ func loadDatabaseConfig() (DatabaseConfig, error) {
 	} else {
 		// Validate SSL mode
 		validModes := map[string]struct{}{
-			sslModeDisable:    {},
-			sslModeAllow:      {},
-			sslModePrefer:     {},
-			sslModeRequire:    {},
-			sslModeVerifyCA:   {},
-			sslModeVerifyFull: {},
+			"disable":     {},
+			"allow":       {},
+			"prefer":      {},
+			"require":     {},
+			"verify-ca":   {},
+			"verify-full": {},
 		}
 		if _, ok := validModes[sslmode]; !ok {
-			return DatabaseConfig{}, fmt.Errorf("invalid DB_SSLMODE: %s (must be one of: %s, %s, %s, %s, %s, %s)",
-				sslmode, sslModeDisable, sslModeAllow, sslModePrefer, sslModeRequire, sslModeVerifyCA, sslModeVerifyFull)
+			return DatabaseConfig{}, fmt.Errorf("invalid DB_SSLMODE: %s (must be one of: disable, allow, prefer, require, verify-ca, verify-full)", sslmode)
 		}
 	}
 
