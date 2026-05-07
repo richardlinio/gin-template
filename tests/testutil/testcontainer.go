@@ -61,7 +61,8 @@ func NewPostgresContainer(ctx context.Context) (*PostgresContainer, error) {
 	}
 
 	// Start PostgreSQL container with initialization scripts
-	postgresContainer, err := postgres.Run(ctx,
+	postgresContainer, err := postgres.Run(
+		ctx,
 		"postgres:16-alpine",
 		postgres.WithDatabase(TestDBName),
 		postgres.WithUsername(TestDBUser),
@@ -70,7 +71,8 @@ func NewPostgresContainer(ctx context.Context) (*PostgresContainer, error) {
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
-				WithStartupTimeout(60*time.Second)),
+				WithStartupTimeout(60*time.Second),
+		),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start postgres container: %w", err)

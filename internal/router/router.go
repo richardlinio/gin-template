@@ -64,7 +64,8 @@ func (r *Router) setupRequestIDMiddleware() {
 	r.engine.Use(requestid.New(
 		requestid.WithHandler(func(c *gin.Context, id string) {
 			c.Header("X-Request-ID", id)
-		})))
+		}),
+	))
 }
 
 func (r *Router) setupLoggingMiddleware() {

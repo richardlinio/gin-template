@@ -36,7 +36,8 @@ func ErrorHandler(logger *slog.Logger, jwtConfig config.JWTConfig) gin.HandlerFu
 		// Unexpected error - log full error and return generic error
 		if !errors.As(err, &appErr) {
 
-			logger.Error("Unexpected error",
+			logger.Error(
+				"Unexpected error",
 				"request_id", reqID,
 				"error", err,
 				"method", c.Request.Method,
@@ -54,7 +55,8 @@ func ErrorHandler(logger *slog.Logger, jwtConfig config.JWTConfig) gin.HandlerFu
 		}
 
 		// Custom error - log and return structured error
-		logger.Warn("Application error",
+		logger.Warn(
+			"Application error",
 			"request_id", reqID,
 			"code", appErr.Code,
 			"message", appErr.Message,
@@ -68,7 +70,8 @@ func ErrorHandler(logger *slog.Logger, jwtConfig config.JWTConfig) gin.HandlerFu
 
 		// If there's an underlying error, log it at error level
 		if appErr.Err != nil {
-			logger.Error("Underlying error",
+			logger.Error(
+				"Underlying error",
 				"request_id", reqID,
 				"error", appErr.Err,
 			)
