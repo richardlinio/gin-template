@@ -8,7 +8,7 @@ CREATE TABLE users (
     id bigserial PRIMARY KEY,
     username varchar(50) NOT NULL,
     password_hash varchar(60) NOT NULL,
-    user_role user_role NOT NULL DEFAULT 'USER',
+    account_role user_role NOT NULL DEFAULT 'USER',
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz NOT NULL DEFAULT NOW(),
     deleted_at timestamptz NULL

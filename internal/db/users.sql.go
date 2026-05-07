@@ -54,7 +54,7 @@ SELECT
     id,
     username,
     password_hash,
-    user_role,
+    account_role,
     created_at,
     updated_at
 FROM
@@ -68,7 +68,7 @@ type GetUserByIDRow struct {
 	ID           int64              `json:"id"`
 	Username     string             `json:"username"`
 	PasswordHash string             `json:"password_hash"`
-	UserRole     UserRole           `json:"user_role"`
+	AccountRole  UserRole           `json:"account_role"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
@@ -80,7 +80,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
-		&i.UserRole,
+		&i.AccountRole,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -92,7 +92,7 @@ SELECT
     id,
     username,
     password_hash,
-    user_role,
+    account_role,
     created_at,
     updated_at
 FROM
@@ -106,7 +106,7 @@ type GetUserByUsernameRow struct {
 	ID           int64              `json:"id"`
 	Username     string             `json:"username"`
 	PasswordHash string             `json:"password_hash"`
-	UserRole     UserRole           `json:"user_role"`
+	AccountRole  UserRole           `json:"account_role"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
@@ -118,7 +118,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUs
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
-		&i.UserRole,
+		&i.AccountRole,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

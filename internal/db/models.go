@@ -66,7 +66,7 @@ type User struct {
 	ID           int64              `json:"id"`
 	Username     string             `json:"username"`
 	PasswordHash string             `json:"password_hash"`
-	UserRole     UserRole           `json:"user_role"`
+	AccountRole  UserRole           `json:"account_role"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 	DeletedAt    pgtype.Timestamptz `json:"deleted_at"`

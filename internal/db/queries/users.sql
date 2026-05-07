@@ -9,7 +9,7 @@ SELECT
     id,
     username,
     password_hash,
-    user_role,
+    account_role,
     created_at,
     updated_at
 FROM
@@ -34,7 +34,7 @@ SELECT
     id,
     username,
     password_hash,
-    user_role,
+    account_role,
     created_at,
     updated_at
 FROM
