@@ -68,7 +68,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	message := "註冊成功"
+	message := "Registration successful"
 	response := dto.ToRegisterResponse(message, userID)
 	c.JSON(http.StatusCreated, response)
 }
@@ -113,7 +113,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	h.clearAccessTokenCookie(c)
 	h.clearRefreshTokenCookie(c)
 
-	message := "登出成功"
+	message := "Logout successful"
 	response := dto.ToLogoutResponse(message)
 	c.JSON(http.StatusOK, response)
 }

@@ -109,16 +109,16 @@ func parseValidationErrors(err error) map[string]string {
 	return nil
 }
 
-// getValidationMessage returns Chinese error messages based on validation rules
+// getValidationMessage returns error messages based on validation rules
 func getValidationMessage(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
-		return "此欄位為必填"
+		return "This field is required"
 	case "min":
-		return fmt.Sprintf("長度至少需要 %s 個字元", fe.Param())
+		return fmt.Sprintf("Minimum length is %s characters", fe.Param())
 	case "max":
-		return fmt.Sprintf("長度不可超過 %s 個字元", fe.Param())
+		return fmt.Sprintf("Maximum length is %s characters", fe.Param())
 	default:
-		return "格式無效"
+		return "Invalid format"
 	}
 }

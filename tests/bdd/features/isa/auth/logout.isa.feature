@@ -46,7 +46,7 @@ Feature: User Logout API Implementation
     And the response body should contain field "message"
 
     # Verification: Response values
-    And the response body field "message" should equal string "登出成功"
+    And the response body field "message" should equal string "Logout successful"
 
   Scenario: Non-logged-in user can logout without token
     # No setup needed - no user logged in
@@ -59,4 +59,4 @@ Feature: User Logout API Implementation
 
     # Verification: Response values
     And the response body should contain field "message"
-    And the response body field "message" should equal string "登出成功"
+    And the response body field "message" should equal string "Logout successful"

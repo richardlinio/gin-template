@@ -138,8 +138,8 @@ func testRequestsWithinLimit(t *testing.T, server *httptest.Server) {
 		t.Errorf("Expected error code ERR_RATE_LIMIT_EXCEEDED, got %s", errResp.Code)
 	}
 
-	if errResp.Error != "請求次數過多,請稍後再試" {
-		t.Errorf("Expected error message '請求次數過多,請稍後再試', got '%s'", errResp.Error)
+	if errResp.Error != "Too many requests, please try again later" {
+		t.Errorf("Expected error message 'Too many requests, please try again later', got '%s'", errResp.Error)
 	}
 }
 

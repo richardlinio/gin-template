@@ -73,7 +73,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegisterResponse'
               example:
-                message: "註冊成功"
+                message: "Registration successful"
                 userId: 1
         '400':
           description: Validation failed - invalid username or password format
@@ -86,15 +86,15 @@ paths:
                   summary: Validation error with details
                   value:
                     code: "ERR_VALIDATION_FAILED"
-                    error: "使用者名稱或密碼格式無效"
+                    error: "Invalid username or password format"
                     details:
-                      Username: "長度至少需要 3 個字元"
-                      Password: "長度至少需要 8 個字元"
+                      Username: "Minimum length is 3 characters"
+                      Password: "Minimum length is 8 characters"
                 passwordTooLong:
                   summary: Password too long
                   value:
                     code: "ERR_PASSWORD_TOO_LONG"
-                    error: "使用者名稱或密碼格式無效"
+                    error: "Invalid username or password format"
         '409':
           description: Username already exists
           content:
@@ -103,7 +103,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_USERNAME_EXISTS"
-                error: "使用者名稱已存在"
+                error: "Username already exists"
         '429':
           description: Too many registration attempts
           content:
@@ -112,7 +112,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_RATE_LIMIT_EXCEEDED"
-                error: "請求次數過多,請稍後再試"
+                error: "Too many requests, please try again later"
         '500':
           description: Internal server error
           content:
@@ -124,12 +124,12 @@ paths:
                   summary: Database error
                   value:
                     code: "ERR_DATABASE_ERROR"
-                    error: "資料庫操作失敗"
+                    error: "Database operation failed"
                 internalError:
                   summary: Internal server error
                   value:
                     code: "ERR_INTERNAL_SERVER_ERROR"
-                    error: "伺服器內部錯誤"
+                    error: "Internal server error"
 
   /auth/login:
     post:
@@ -184,7 +184,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_VALIDATION_FAILED"
-                error: "使用者名稱或密碼格式無效"
+                error: "Invalid username or password format"
         '401':
           description: Authentication failed - invalid username or password, or rate limited
           content:
@@ -193,7 +193,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_AUTH_FAILED"
-                error: "使用者名稱或密碼無效"
+                error: "Invalid username or password"
         '429':
           description: Too many login attempts (returns 401 with ERR_AUTH_FAILED for security)
           content:
@@ -202,7 +202,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_AUTH_FAILED"
-                error: "使用者名稱或密碼無效"
+                error: "Invalid username or password"
         '500':
           description: Internal server error
           content:
@@ -211,7 +211,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_INTERNAL_SERVER_ERROR"
-                error: "伺服器內部錯誤"
+                error: "Internal server error"
 
   /auth/logout:
     post:
@@ -244,7 +244,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/LogoutResponse'
               example:
-                message: "登出成功"
+                message: "Logout successful"
         '500':
           description: Internal server error during logout
           content:
@@ -253,7 +253,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_INTERNAL_SERVER_ERROR"
-                error: "伺服器內部錯誤"
+                error: "Internal server error"
 
   /auth/refresh:
     post:
@@ -305,7 +305,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_UNAUTHORIZED"
-                error: "未授權或權杖無效"
+                error: "Unauthorized or invalid token"
         '500':
           description: Internal server error during token refresh
           content:
@@ -314,7 +314,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 code: "ERR_INTERNAL_SERVER_ERROR"
-                error: "伺服器內部錯誤"
+                error: "Internal server error"
 
 components:
   securitySchemes:
@@ -359,16 +359,16 @@ components:
           example: "ERR_VALIDATION_FAILED"
         error:
           type: string
-          description: User-friendly error message in Traditional Chinese
-          example: "使用者名稱或密碼格式無效"
+          description: User-friendly error message
+          example: "Invalid username or password format"
         details:
           type: object
           description: Optional field-level validation errors (only present for validation errors)
           additionalProperties:
             type: string
           example:
-            Username: "長度至少需要 3 個字元"
-            Password: "長度至少需要 8 個字元"
+            Username: "Minimum length is 3 characters"
+            Password: "Minimum length is 8 characters"
       required:
         - code
         - error
@@ -399,7 +399,7 @@ components:
         message:
           type: string
           description: Success message
-          example: "註冊成功"
+          example: "Registration successful"
         userId:
           type: integer
           format: int64
@@ -478,6 +478,6 @@ components:
         message:
           type: string
           description: Success message
-          example: "登出成功"
+          example: "Logout successful"
       required:
         - message
