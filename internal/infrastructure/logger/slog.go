@@ -9,6 +9,16 @@ import (
 	"github.com/richardlinio/gin-template/internal/config"
 )
 
+const (
+	formatJSON   = "json"
+	formatText   = "text"
+	levelDebug   = "debug"
+	levelInfo    = "info"
+	levelWarn    = "warn"
+	levelWarning = "warning"
+	levelError   = "error"
+)
+
 // NewLogger creates and configures a new slog.Logger instance
 // based on the provided LoggerConfig
 func NewLogger(cfg config.LoggerConfig) *slog.Logger {
@@ -30,12 +40,12 @@ func NewLogger(cfg config.LoggerConfig) *slog.Logger {
 	}
 
 	switch cfg.Format {
-	case "json":
+	case formatJSON:
 		handler = slog.NewJSONHandler(output, opts)
-	case "text":
+	case formatText:
 		handler = slog.NewTextHandler(output, opts)
 	default:
-		fmt.Fprintf(os.Stderr, "Warning: invalid log format '%s', using default 'text'\n", cfg.Format)
+		fmt.Fprintf(os.Stderr, "Warning: invalid log format '%s', using default '%s'\n", cfg.Format, formatText)
 		handler = slog.NewTextHandler(output, opts)
 	}
 
@@ -48,16 +58,16 @@ func parseLogLevel(level string) slog.Level {
 	level = strings.ToLower(level)
 
 	switch level {
-	case "debug":
+	case levelDebug:
 		return slog.LevelDebug
-	case "info":
+	case levelInfo:
 		return slog.LevelInfo
-	case "warn", "warning":
+	case levelWarn, levelWarning:
 		return slog.LevelWarn
-	case "error":
+	case levelError:
 		return slog.LevelError
 	default:
-		fmt.Fprintf(os.Stderr, "Warning: invalid log level '%s', using default 'info'\n", level)
+		fmt.Fprintf(os.Stderr, "Warning: invalid log level '%s', using default '%s'\n", level, levelInfo)
 		return slog.LevelInfo
 	}
 }

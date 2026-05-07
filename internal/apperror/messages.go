@@ -1,5 +1,6 @@
 package apperror
 
+// #nosec G101 -- user-facing error messages, not credentials
 var errorMessages = map[string]string{
 	// Validation errors (400) - both use same message for security
 	CodeValidationFailed: "使用者名稱或密碼格式無效",

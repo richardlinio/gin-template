@@ -66,6 +66,7 @@ func iSendRequestTo(ctx context.Context, method, path string) (context.Context, 
 	// Add cookies to request if they were set
 	if cookies, ok := ctx.Value(testcontext.ContextKeyCookies).(map[string]string); ok {
 		for name, value := range cookies {
+			// #nosec G124 -- BDD test client cookies; security attributes verified separately by cookieShouldHaveAttribute
 			req.AddCookie(&http.Cookie{
 				Name:  name,
 				Value: value,
