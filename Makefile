@@ -13,6 +13,7 @@ GOOSE_CMD=goose -dir $(GOOSE_MIGRATION_DIR) $(GOOSE_DRIVER) "$(GOOSE_DB_DSN)"
 .PHONY: fmt
 fmt:
 	$(DOCKER_EXEC) gofumpt -l -w .
+	$(DOCKER_EXEC) sh -c 'find migrations internal/db/queries -name "*.sql" -print0 | xargs -0 -r pg_format --config /app/.pg_format --inplace --multiline --placeholder "-- \+goose StatementBegin[\s\S]*?-- \+goose StatementEnd\n+"'
 
 .PHONY: lint
 lint:

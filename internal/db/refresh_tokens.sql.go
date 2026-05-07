@@ -13,7 +13,7 @@ import (
 
 const createRefreshToken = `-- name: CreateRefreshToken :exec
 INSERT INTO refresh_tokens (token_jti, user_id, expires_at)
-VALUES ($1, $2, $3)
+    VALUES ($1, $2, $3)
 `
 
 type CreateRefreshTokenParams struct {
@@ -28,7 +28,8 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 }
 
 const deleteExpiredRefreshTokens = `-- name: DeleteExpiredRefreshTokens :exec
-DELETE FROM refresh_tokens WHERE expires_at < NOW()
+DELETE FROM refresh_tokens
+WHERE expires_at < NOW()
 `
 
 func (q *Queries) DeleteExpiredRefreshTokens(ctx context.Context) error {
@@ -37,8 +38,14 @@ func (q *Queries) DeleteExpiredRefreshTokens(ctx context.Context) error {
 }
 
 const getRefreshToken = `-- name: GetRefreshToken :one
-SELECT id, token_jti, user_id, created_at, revoked_at, expires_at FROM refresh_tokens
-WHERE token_jti = $1 AND revoked_at IS NULL AND expires_at > NOW()
+SELECT
+    id, token_jti, user_id, created_at, revoked_at, expires_at
+FROM
+    refresh_tokens
+WHERE
+    token_jti = $1
+    AND revoked_at IS NULL
+    AND expires_at > NOW()
 `
 
 func (q *Queries) GetRefreshToken(ctx context.Context, tokenJti string) (RefreshToken, error) {
@@ -56,8 +63,13 @@ func (q *Queries) GetRefreshToken(ctx context.Context, tokenJti string) (Refresh
 }
 
 const revokeAllUserRefreshTokens = `-- name: RevokeAllUserRefreshTokens :exec
-UPDATE refresh_tokens SET revoked_at = NOW()
-WHERE user_id = $1 AND revoked_at IS NULL
+UPDATE
+    refresh_tokens
+SET
+    revoked_at = NOW()
+WHERE
+    user_id = $1
+    AND revoked_at IS NULL
 `
 
 func (q *Queries) RevokeAllUserRefreshTokens(ctx context.Context, userID int64) error {
@@ -66,8 +78,12 @@ func (q *Queries) RevokeAllUserRefreshTokens(ctx context.Context, userID int64) 
 }
 
 const revokeRefreshToken = `-- name: RevokeRefreshToken :exec
-UPDATE refresh_tokens SET revoked_at = NOW()
-WHERE token_jti = $1
+UPDATE
+    refresh_tokens
+SET
+    revoked_at = NOW()
+WHERE
+    token_jti = $1
 `
 
 func (q *Queries) RevokeRefreshToken(ctx context.Context, tokenJti string) error {

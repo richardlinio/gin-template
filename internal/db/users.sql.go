@@ -13,8 +13,9 @@ import (
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, password_hash)
-VALUES ($1, $2)
-RETURNING id
+    VALUES ($1, $2)
+RETURNING
+    id
 `
 
 type CreateUserParams struct {
@@ -30,10 +31,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, 
 }
 
 const existsUserByUsername = `-- name: ExistsUserByUsername :one
-SELECT EXISTS(
-    SELECT 1 FROM users
-    WHERE username = $1 AND deleted_at IS NULL
-)
+SELECT
+    EXISTS (
+        SELECT
+            1
+        FROM
+            users
+        WHERE
+            username = $1
+            AND deleted_at IS NULL)
 `
 
 func (q *Queries) ExistsUserByUsername(ctx context.Context, username string) (bool, error) {
@@ -44,16 +50,25 @@ func (q *Queries) ExistsUserByUsername(ctx context.Context, username string) (bo
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, password_hash, role, created_at, updated_at
-FROM users
-WHERE id = $1 AND deleted_at IS NULL
+SELECT
+    id,
+    username,
+    password_hash,
+    user_role,
+    created_at,
+    updated_at
+FROM
+    users
+WHERE
+    id = $1
+    AND deleted_at IS NULL
 `
 
 type GetUserByIDRow struct {
 	ID           int64              `json:"id"`
 	Username     string             `json:"username"`
 	PasswordHash string             `json:"password_hash"`
-	Role         UserRole           `json:"role"`
+	UserRole     UserRole           `json:"user_role"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
@@ -65,7 +80,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
-		&i.Role,
+		&i.UserRole,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -73,16 +88,25 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password_hash, role, created_at, updated_at
-FROM users
-WHERE username = $1 AND deleted_at IS NULL
+SELECT
+    id,
+    username,
+    password_hash,
+    user_role,
+    created_at,
+    updated_at
+FROM
+    users
+WHERE
+    username = $1
+    AND deleted_at IS NULL
 `
 
 type GetUserByUsernameRow struct {
 	ID           int64              `json:"id"`
 	Username     string             `json:"username"`
 	PasswordHash string             `json:"password_hash"`
-	Role         UserRole           `json:"role"`
+	UserRole     UserRole           `json:"user_role"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
@@ -94,7 +118,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUs
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
-		&i.Role,
+		&i.UserRole,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

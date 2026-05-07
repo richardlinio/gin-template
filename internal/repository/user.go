@@ -43,7 +43,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id int64) (*model.User, er
 		ID:           row.ID,
 		Username:     row.Username,
 		PasswordHash: row.PasswordHash,
-		Role:         string(row.Role),
+		Role:         string(row.UserRole),
 		CreatedAt:    row.CreatedAt.Time,
 		UpdatedAt:    row.UpdatedAt.Time,
 	}
@@ -66,7 +66,7 @@ func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*m
 		ID:           row.ID,
 		Username:     row.Username,
 		PasswordHash: row.PasswordHash,
-		Role:         string(row.Role),
+		Role:         string(row.UserRole),
 		CreatedAt:    row.CreatedAt.Time,
 		UpdatedAt:    row.UpdatedAt.Time,
 	}
