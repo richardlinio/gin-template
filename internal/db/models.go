@@ -54,20 +54,20 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 }
 
 type RefreshToken struct {
-	ID        int64            `json:"id"`
-	TokenJti  string           `json:"token_jti"`
-	UserID    int64            `json:"user_id"`
-	CreatedAt pgtype.Timestamp `json:"created_at"`
-	RevokedAt pgtype.Timestamp `json:"revoked_at"`
-	ExpiresAt pgtype.Timestamp `json:"expires_at"`
+	ID        int64              `json:"id"`
+	TokenJti  string             `json:"token_jti"`
+	UserID    int64              `json:"user_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	RevokedAt pgtype.Timestamptz `json:"revoked_at"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
 }
 
 type User struct {
-	ID           int64            `json:"id"`
-	Username     string           `json:"username"`
-	PasswordHash string           `json:"password_hash"`
-	Role         UserRole         `json:"role"`
-	CreatedAt    pgtype.Timestamp `json:"created_at"`
-	UpdatedAt    pgtype.Timestamp `json:"updated_at"`
-	DeletedAt    pgtype.Timestamp `json:"deleted_at"`
+	ID           int64              `json:"id"`
+	Username     string             `json:"username"`
+	PasswordHash string             `json:"password_hash"`
+	Role         UserRole           `json:"role"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt    pgtype.Timestamptz `json:"deleted_at"`
 }

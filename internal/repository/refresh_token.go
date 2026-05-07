@@ -31,7 +31,7 @@ func (r *RefreshTokenRepository) Create(ctx context.Context, jti string, userID 
 	return r.queries.CreateRefreshToken(ctx, db.CreateRefreshTokenParams{
 		TokenJti: jti,
 		UserID:   userID,
-		ExpiresAt: pgtype.Timestamp{
+		ExpiresAt: pgtype.Timestamptz{
 			Time:  expiresAt,
 			Valid: true,
 		},

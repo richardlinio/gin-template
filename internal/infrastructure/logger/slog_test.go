@@ -96,6 +96,7 @@ func TestParseLogLevel(t *testing.T) {
 	}
 }
 
+//nolint:gocyclo // Table-driven test with multiple scenarios
 func TestNewLogger(t *testing.T) {
 	tests := []struct {
 		name   string

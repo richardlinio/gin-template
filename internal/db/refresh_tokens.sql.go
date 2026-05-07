@@ -17,9 +17,9 @@ VALUES ($1, $2, $3)
 `
 
 type CreateRefreshTokenParams struct {
-	TokenJti  string           `json:"token_jti"`
-	UserID    int64            `json:"user_id"`
-	ExpiresAt pgtype.Timestamp `json:"expires_at"`
+	TokenJti  string             `json:"token_jti"`
+	UserID    int64              `json:"user_id"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
 }
 
 func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error {

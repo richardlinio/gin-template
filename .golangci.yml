@@ -46,7 +46,7 @@ linters:
       check-type-assertions: true
       check-blank: false
     gocyclo:
-      min-complexity: 30
+      min-complexity: 15
     gosec:
       excludes:
         - G104
