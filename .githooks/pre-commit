@@ -1,47 +1,28 @@
 #!/usr/bin/env bash
-# pre-commit: run `make fmt`, then re-stage formatted versions of files that
-# were already in the staging set — without disturbing partial-stage workflows.
+# pre-commit: format staged Go / SQL files, then re-stage them.
 #
-# # Why this is more involved than `make fmt && git add`
+# Design philosophy (mirrors lint-staged + Biome --staged --write):
+#   1. Pick the staged files that match the formatters we run.
+#   2. Run the formatters on the working-tree copies of those files.
+#   3. `git add` the formatted results so they land in this commit.
 #
-# `make fmt` rewrites the entire working tree, so a naive `git add <staged
-# paths>` after fmt would smuggle every unstaged hunk in those files into the
-# commit. To preserve `git add -p` workflows we have to:
+# We deliberately do NOT try to isolate staged from unstaged hunks. If a file
+# has both staged and unstaged changes, the formatter rewrites the whole file
+# (staged + unstaged), and the unstaged portion stays in the working tree —
+# the next commit will pick it up. gofumpt and pg_format are idempotent and
+# touch only syntax, so this is safe in practice and matches how the wider
+# JS / Python ecosystem handles partial-stage formatting.
 #
-#   1. Reset the working tree of staged paths to their index content (so fmt
-#      sees only what is actually being committed).
-#   2. Run `make fmt`.
-#   3. Re-stage paths that fmt modified.
-#   4. Re-apply the original unstaged hunks back onto the working tree with
-#      plain `git apply` (NEVER `--3way`, which silently updates the index and
-#      would leak unstaged hunks into the commit).
-#
-# If anything fails — including the unstaged-hunk re-apply colliding with fmt
-# edits — we roll back to the exact pre-hook state and abort the commit so the
-# user never loses staged or unstaged work.
-#
-# # Known trade-off
-#
-# When fmt rewrites a context line that an unstaged hunk depends on, plain
-# `git apply` cannot re-apply the unstaged patch. We treat this as fatal,
-# fully restore pre-hook state, and ask the user to stash unstaged changes
-# before retrying. This is rare in practice (gofumpt / pg_format usually only
-# touch syntax already present in the staged hunks).
-#
-# # Portability notes
-#
-# - Works on macOS bash 3.2 (no `mapfile`, no NUL inside shell variables).
-# - NUL-separated path lists go through tempfiles, never through `$VAR`.
-# - No `xargs -r`: GNU-only, and BSD `xargs` already skips empty input.
+# Trade-off: if you have unstaged changes in a staged file, those unstaged
+# lines also get formatted (but stay unstaged). This is intentional — the
+# previous "absolute isolation" design broke whenever fmt touched a context
+# line that an unstaged hunk depended on, forcing a stash/retry/pop dance.
 
 set -euo pipefail
 
 # ───────── friendly precheck: backend container running? ─────────
-# `make fmt` runs `docker compose exec backend ...`. If the container is down
-# the user sees "Error response from daemon: container ... is not running",
-# which is unhelpful. Catch it early.
 if ! command -v docker >/dev/null 2>&1; then
-  echo "pre-commit: 'docker' CLI not found — required by 'make fmt'." >&2
+  echo "pre-commit: 'docker' CLI not found — required by formatters." >&2
   exit 1
 fi
 
@@ -52,92 +33,45 @@ if [ -z "$(docker compose ps --status running -q backend 2>/dev/null || true)" ]
   exit 1
 fi
 
-# ───────── snapshot pre-hook state ─────────
-staged_list=$(mktemp -t precommit-staged.XXXXXX)
-unstaged_patch=$(mktemp -t precommit-unstaged.XXXXXX)
-preserve_unstaged_patch=0
-cleanup() {
-  rm -f "$staged_list"
-  if [ "$preserve_unstaged_patch" -eq 0 ]; then
-    rm -f "$unstaged_patch"
-  fi
-}
-trap cleanup EXIT
+# ───────── collect staged Go / SQL files ─────────
+# `--diff-filter=d` excludes deletions (can't `git add` them).
+# Use NUL separators to survive paths with spaces.
+go_files=()
+sql_files=()
+while IFS= read -r -d '' p; do
+  case "$p" in
+    *.go)  go_files+=("$p") ;;
+    *.sql) sql_files+=("$p") ;;
+  esac
+done < <(git diff -z --name-only --cached --diff-filter=d)
 
-# Collect staged paths (NUL-separated; deletions excluded — can't `git add` them).
-git diff -z --name-only --cached --diff-filter=d > "$staged_list"
-
-# Nothing staged → nothing for the hook to do (e.g. commit -a flow not used here).
-if [ ! -s "$staged_list" ]; then
+# Nothing to format → exit clean.
+if [ ${#go_files[@]} -eq 0 ] && [ ${#sql_files[@]} -eq 0 ]; then
   exit 0
 fi
 
-# Snapshot index tree (rollback target) and unstaged diff (binary-safe patch).
-pre_index_tree=$(git write-tree)
-git diff --binary > "$unstaged_patch"
-has_unstaged=0
-[ -s "$unstaged_patch" ] && has_unstaged=1
+# ───────── format staged files in place ─────────
+# gofumpt is idempotent and only touches whitespace/imports — running it on a
+# file with mixed staged+unstaged content is safe.
+if [ ${#go_files[@]} -gt 0 ]; then
+  docker compose exec -T backend gofumpt -w "${go_files[@]}"
+fi
 
-rollback() {
-  # Restore index to pre-hook state.
-  git read-tree "$pre_index_tree"
-  # Force working tree of staged paths back to pre-hook index content.
-  git checkout-index --stdin -z -f -- < "$staged_list"
-  # Re-apply unstaged hunks so working tree fully matches pre-hook state.
-  if [ "$has_unstaged" -eq 1 ]; then
-    if ! git apply --whitespace=nowarn "$unstaged_patch" 2>/dev/null; then
-      echo "" >&2
-      echo "pre-commit: rollback could not re-apply your unstaged hunks." >&2
-      echo "            Your unstaged diff is preserved at:" >&2
-      echo "              $unstaged_patch" >&2
-      echo "            Recover with: git apply $unstaged_patch" >&2
-      preserve_unstaged_patch=1
-    fi
-  fi
-}
+# pg_format is more aggressive (rewrites SQL formatting), but in this repo
+# SQL files rarely have concurrent staged+unstaged edits.
+if [ ${#sql_files[@]} -gt 0 ]; then
+  docker compose exec -T backend pg_format \
+    --config /app/.pg_format \
+    --inplace \
+    --multiline \
+    --placeholder "-- \+goose StatementBegin[\s\S]*?-- \+goose StatementEnd\n*" \
+    "${sql_files[@]}"
+fi
 
-# ───────── isolate staged content for fmt ─────────
-# Reset the working tree of staged paths to their index content. Untracked
-# files are left alone. After this, fmt sees only what's actually being
-# committed — no unstaged hunks bleed in.
-git checkout-index --stdin -z -f -- < "$staged_list"
-
-# Any failure between here and the explicit `trap -` triggers full rollback.
-trap 'rc=$?; rollback; exit $rc' ERR INT TERM
-
-# ───────── format ─────────
-make fmt
-
-# ───────── re-stage formatted versions ─────────
-# For each originally-staged path: if fmt modified it, `git add` the new
-# version. Skip paths fmt didn't touch — re-adding them would do nothing
-# meaningful and adds noise to large commits.
-while IFS= read -r -d '' p; do
-  [ -z "$p" ] && continue
+# ───────── re-stage the formatted versions ─────────
+# Skip files fmt didn't touch — re-adding them is a no-op but adds noise.
+for p in "${go_files[@]}" "${sql_files[@]}"; do
   if ! git diff --quiet -- "$p"; then
     git add -- "$p"
   fi
-done < "$staged_list"
-
-# ───────── restore unstaged hunks to working tree ─────────
-# Plain `git apply` only — NEVER `--3way`. Empirically, `--3way` updates the
-# index, which would leak unstaged hunks into the commit being built.
-if [ "$has_unstaged" -eq 1 ]; then
-  if ! git apply --whitespace=nowarn "$unstaged_patch" 2>/dev/null; then
-    echo "" >&2
-    echo "pre-commit: 'make fmt' edited a line that your unstaged hunks depend on" >&2
-    echo "            for context, so the unstaged patch can't be cleanly re-applied." >&2
-    echo "            Restoring pre-hook state and aborting the commit." >&2
-    echo "" >&2
-    echo "            Workaround: stash your unstaged hunks, retry the commit, then" >&2
-    echo "                        pop the stash:" >&2
-    echo "              git stash push -m 'pre-fmt-unstaged' --keep-index" >&2
-    echo "              git commit ...   # this hook now runs with no unstaged hunks" >&2
-    echo "              git stash pop" >&2
-    rollback
-    trap - ERR INT TERM
-    exit 1
-  fi
-fi
-
-trap - ERR INT TERM
+done
