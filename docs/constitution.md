@@ -4,8 +4,8 @@
 >
 > **三檔分工**：
 > - 架構鐵律（MUST / NEVER，違反 = 架構崩潰） → 本檔
-> - 開發 workflow 與 agent 偏好（怎麼動手） → [`CLAUDE.md`](./CLAUDE.md)
-> - 專案介紹與啟動指引（給人類讀者） → [`README.md`](./README.md)
+> - 開發 workflow 與 agent 偏好（怎麼動手） → [`CLAUDE.md`](../CLAUDE.md)
+> - 專案介紹與啟動指引（給人類讀者） → [`README.md`](../README.md)
 >
 > **修改原則**：本檔每條規則對應實證程式碼，違反會破壞既有架構。新增/移除條款必須走治理流程（見章末）。
 
@@ -187,13 +187,13 @@ return nil, err  // FORBIDDEN if err is a raw driver error
 
 呼應 §II。新增一個 error type 必須完成下列五步：
 
-**Step 1 — 加 code 常數** [`internal/apperror/codes.go`](./internal/apperror/codes.go)（**置於對應 HTTP status section 內**）：
+**Step 1 — 加 code 常數** [`internal/apperror/codes.go`](../internal/apperror/codes.go)（**置於對應 HTTP status section 內**）：
 
 ```go
 const CodeResourceNotFound = "ERR_RESOURCE_NOT_FOUND"
 ```
 
-**Step 2 — 加中文訊息** [`internal/apperror/messages.go`](./internal/apperror/messages.go)：
+**Step 2 — 加中文訊息** [`internal/apperror/messages.go`](../internal/apperror/messages.go)：
 
 ```go
 var errorMessages = map[string]string{
@@ -201,7 +201,7 @@ var errorMessages = map[string]string{
 }
 ```
 
-**Step 3 — 對應 HTTP status** [`internal/apperror/status.go`](./internal/apperror/status.go)：
+**Step 3 — 對應 HTTP status** [`internal/apperror/status.go`](../internal/apperror/status.go)：
 
 ```go
 var httpStatusMap = map[string]int{
@@ -209,7 +209,7 @@ var httpStatusMap = map[string]int{
 }
 ```
 
-**Step 4 — 加 constructor** [`internal/apperror/error.go`](./internal/apperror/error.go)：
+**Step 4 — 加 constructor** [`internal/apperror/error.go`](../internal/apperror/error.go)：
 
 ```go
 func ResourceNotFound() *AppError {

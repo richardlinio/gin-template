@@ -3,11 +3,11 @@
 > **本檔角色**：給 Claude Code / AI agent 的開發 workflow 與偏好。
 >
 > **三檔分工**：
-> - 架構鐵律（MUST / NEVER） → [`constitution.md`](./constitution.md)
+> - 架構鐵律（MUST / NEVER） → [`docs/constitution.md`](./docs/constitution.md)
 > - 專案介紹、啟動指引、目錄結構、API 端點、commands → [`README.md`](./README.md)
 > - Workflow 步驟與 agent 偏好 → 本檔
 
-**動手前 MUST 先讀** [`constitution.md`](./constitution.md) 七條核心原則。本檔為其補充，不重複條文。
+**動手前 MUST 先讀** [`docs/constitution.md`](./docs/constitution.md) 七條核心原則。本檔為其補充，不重複條文。
 
 ---
 
@@ -27,7 +27,7 @@
 
 ## Workflow：新增 Error Type
 
-完整 5 步驟見 `constitution.md` 附錄 A。捷徑：開 [`internal/apperror/codes.go`](./internal/apperror/codes.go) 找一個現有條目當範本，依樣修改 4 個檔案（codes / messages / status / error）。
+完整 5 步驟見 [`docs/constitution.md`](./docs/constitution.md) 附錄 A。捷徑：開 [`internal/apperror/codes.go`](./internal/apperror/codes.go) 找一個現有條目當範本，依樣修改 4 個檔案（codes / messages / status / error）。
 
 新 code **MUST** 插入對應 HTTP status section（400/401/.../503 升序）。
 
