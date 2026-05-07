@@ -2,6 +2,8 @@
 
 A production-ready backend template built with Go Gin framework and PostgreSQL, featuring a complete JWT authentication system.
 
+> **For contributors / AI agents**: architectural rules (MUST / NEVER) are defined in [`constitution.md`](./constitution.md). Development workflow and AI-agent preferences are in [`CLAUDE.md`](./CLAUDE.md).
+
 ## Features
 
 - ✅ **JWT Authentication** - Complete auth system (register, login, logout, refresh token)
@@ -153,8 +155,9 @@ Add new features following the layer-based architecture:
 4. Implement service in `internal/service/`
 5. Create handler in `internal/handler/`
 6. Register routes in `internal/router/router.go`
+7. Wire dependencies in `internal/app/app.go` `New()` (NEVER in `init()` or globals)
 
-See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
+See [`constitution.md`](./constitution.md) for architectural rules and [`CLAUDE.md`](./CLAUDE.md) for development workflow.
 
 ## Configuration
 
@@ -184,7 +187,7 @@ The application uses a unified error handling system with centralized middleware
 - **Automatic logging** based on error severity
 - **Validation error details** for client-side form handling
 
-See [CLAUDE.md](CLAUDE.md) for error handling guidelines.
+Error handling is governed by [`constitution.md`](./constitution.md) §II (the error contract MUST be followed). Step-by-step workflow for adding new error types is in [`CLAUDE.md`](./CLAUDE.md) and [`constitution.md`](./constitution.md) Appendix A.
 
 ## Testing
 
@@ -213,4 +216,6 @@ MIT License - feel free to use this template for any project.
 
 ## Support
 
-For issues or questions, please check [CLAUDE.md](CLAUDE.md) for development guidelines.
+- Architectural rules: [`constitution.md`](./constitution.md)
+- Development workflow: [`CLAUDE.md`](./CLAUDE.md)
+- API reference: [`docs/api-docs/swagger.yaml`](./docs/api-docs/swagger.yaml)
