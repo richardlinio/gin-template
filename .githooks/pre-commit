@@ -1,22 +1,32 @@
 #!/usr/bin/env bash
-# pre-commit: format staged Go / SQL files, then re-stage them.
+# pre-commit: format staged Go / SQL content without disturbing unstaged hunks.
 #
-# Design philosophy (mirrors lint-staged + Biome --staged --write):
-#   1. Pick the staged files that match the formatters we run.
-#   2. Run the formatters on the working-tree copies of those files.
-#   3. `git add` the formatted results so they land in this commit.
+# Algorithm (mirrors lint-staged with --staged + Biome-style index rewrite):
 #
-# We deliberately do NOT try to isolate staged from unstaged hunks. If a file
-# has both staged and unstaged changes, the formatter rewrites the whole file
-# (staged + unstaged), and the unstaged portion stays in the working tree —
-# the next commit will pick it up. gofumpt and pg_format are idempotent and
-# touch only syntax, so this is safe in practice and matches how the wider
-# JS / Python ecosystem handles partial-stage formatting.
+#   For each staged Go / SQL path P:
+#     1. Read P's staged blob from the index into a temp file.
+#     2. Run gofumpt / pg_format on that temp file.
+#     3. If fmt changed it, write the result back as a new git blob and
+#        update the index entry for P to point at the new blob — without
+#        touching the working tree.
+#     4. (Best-effort) Also run fmt on P's working-tree copy in place, so
+#        the user sees a formatted version of any unstaged hunks too.
+#        Failures here are non-fatal: the commit only depends on step 3.
 #
-# Trade-off: if you have unstaged changes in a staged file, those unstaged
-# lines also get formatted (but stay unstaged). This is intentional — the
-# previous "absolute isolation" design broke whenever fmt touched a context
-# line that an unstaged hunk depended on, forcing a stash/retry/pop dance.
+# Properties:
+#   - Same-file staged + unstaged: only the staged blob is rewritten in the
+#     index. Unstaged hunks stay unstaged; user is never surprised by extra
+#     content sneaking into the commit.
+#   - Different files staged vs unstaged: unstaged files are not touched at all.
+#   - Idempotent formatters (gofumpt is, pg_format is in practice for stable
+#     SQL) make step 4 safe — it converges to the same output as step 1-3.
+#
+# Trade-offs vs the naive "fmt working tree + git add" approach:
+#   + Never collapses unstaged hunks into the commit.
+#   + Never aborts because of fmt-touched context lines.
+#   - More git plumbing (hash-object, update-index --cacheinfo).
+#   - fmt runs twice per file (once on the staged temp file, once on the
+#     working tree). For this repo's file sizes that is negligible.
 
 set -euo pipefail
 
@@ -33,9 +43,11 @@ if [ -z "$(docker compose ps --status running -q backend 2>/dev/null || true)" ]
   exit 1
 fi
 
+# ───────── tempdir for staged blob copies ─────────
+tmpdir=$(mktemp -d -t precommit-stage.XXXXXX)
+trap 'rm -rf "$tmpdir"' EXIT
+
 # ───────── collect staged Go / SQL files ─────────
-# `--diff-filter=d` excludes deletions (can't `git add` them).
-# Use NUL separators to survive paths with spaces.
 go_files=()
 sql_files=()
 while IFS= read -r -d '' p; do
@@ -45,33 +57,96 @@ while IFS= read -r -d '' p; do
   esac
 done < <(git diff -z --name-only --cached --diff-filter=d)
 
-# Nothing to format → exit clean.
 if [ ${#go_files[@]} -eq 0 ] && [ ${#sql_files[@]} -eq 0 ]; then
   exit 0
 fi
 
-# ───────── format staged files in place ─────────
-# gofumpt is idempotent and only touches whitespace/imports — running it on a
-# file with mixed staged+unstaged content is safe.
-if [ ${#go_files[@]} -gt 0 ]; then
-  docker compose exec -T backend gofumpt -w "${go_files[@]}"
-fi
+# ───────── helpers ─────────
 
-# pg_format is more aggressive (rewrites SQL formatting), but in this repo
-# SQL files rarely have concurrent staged+unstaged edits.
-if [ ${#sql_files[@]} -gt 0 ]; then
-  docker compose exec -T backend pg_format \
-    --config /app/.pg_format \
-    --inplace \
-    --multiline \
-    --placeholder "-- \+goose StatementBegin[\s\S]*?-- \+goose StatementEnd\n*" \
-    "${sql_files[@]}"
-fi
+# Run a formatter inside the backend container on a single file, by streaming
+# the file in via stdin and capturing stdout. Used for staged-blob formatting
+# where we don't want the formatter to touch any path on disk.
+#
+# Usage: fmt_stdio <formatter-cmd...> < input > output
+fmt_stdio() {
+  docker compose exec -T backend "$@"
+}
 
-# ───────── re-stage the formatted versions ─────────
-# Skip files fmt didn't touch — re-adding them is a no-op but adds noise.
-for p in "${go_files[@]}" "${sql_files[@]}"; do
-  if ! git diff --quiet -- "$p"; then
-    git add -- "$p"
+# Format the staged blob of $1 and update the index in place if changed.
+# Leaves the working tree alone.
+restage_formatted() {
+  local path="$1"
+  local fmt_cmd="$2"  # "gofumpt" or "pgformat"
+
+  # Pull the staged blob to a host temp file. Use a flat name so the temp
+  # path doesn't collide with directory structure.
+  local safe_name
+  safe_name=$(printf '%s' "$path" | tr '/' '_')
+  local staged_copy="$tmpdir/$safe_name"
+  git show ":$path" > "$staged_copy"
+
+  # Format it. We pipe through stdin to avoid mounting host paths into the
+  # container; gofumpt and pg_format both support stdin/stdout.
+  local formatted
+  formatted="$staged_copy.fmt"
+  case "$fmt_cmd" in
+    gofumpt)
+      fmt_stdio gofumpt < "$staged_copy" > "$formatted"
+      ;;
+    pgformat)
+      fmt_stdio pg_format \
+        --config /app/.pg_format \
+        --multiline \
+        --placeholder "-- \+goose StatementBegin[\s\S]*?-- \+goose StatementEnd\n*" \
+        < "$staged_copy" > "$formatted"
+      ;;
+  esac
+
+  # If the formatter didn't change anything, skip the index update.
+  if cmp -s "$staged_copy" "$formatted"; then
+    return 0
   fi
+
+  # Write the formatted content as a new blob and point the index entry at
+  # it. We preserve the existing mode (cacheinfo wants <mode> <sha> <path>).
+  local mode sha
+  mode=$(git ls-files --stage -- "$path" | awk '{print $1}')
+  sha=$(git hash-object -w -- "$formatted")
+  git update-index --cacheinfo "$mode" "$sha" "$path"
+}
+
+# Format the working-tree copy in place so the user sees a clean version of
+# any unstaged hunks. Best-effort — failures here are not fatal.
+fmt_worktree() {
+  local fmt_cmd="$1"
+  shift
+  case "$fmt_cmd" in
+    gofumpt)
+      docker compose exec -T backend gofumpt -w "$@" || true
+      ;;
+    pgformat)
+      docker compose exec -T backend pg_format \
+        --config /app/.pg_format \
+        --inplace \
+        --multiline \
+        --placeholder "-- \+goose StatementBegin[\s\S]*?-- \+goose StatementEnd\n*" \
+        "$@" || true
+      ;;
+  esac
+}
+
+# ───────── format staged blobs (authoritative for the commit) ─────────
+for p in ${go_files[@]+"${go_files[@]}"}; do
+  restage_formatted "$p" gofumpt
 done
+for p in ${sql_files[@]+"${sql_files[@]}"}; do
+  restage_formatted "$p" pgformat
+done
+
+# ───────── format working-tree copies (best effort, cosmetic only) ─────────
+if [ ${#go_files[@]} -gt 0 ]; then
+  fmt_worktree gofumpt "${go_files[@]}"
+fi
+if [ ${#sql_files[@]} -gt 0 ]; then
+  fmt_worktree pgformat "${sql_files[@]}"
+fi
