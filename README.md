@@ -100,8 +100,8 @@ make fmt
 # Run linter
 make lint
 
-# Build the application
-make build
+# Rebuild docker images from scratch
+make docker-build
 
 # Run tests
 make test
