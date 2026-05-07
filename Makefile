@@ -3,6 +3,9 @@
 # Convention: every target's recipe runs inside the `backend` docker compose
 # service via $(DOCKER_EXEC), unless explicitly noted (docker / swagger / hooks).
 # Run `make help` to see all available targets grouped by category.
+#
+# `make restart` cycles services WITHOUT losing data. Use `make wipe` if you
+# really want to drop volumes (DB will be reset).
 
 # ─── Variables ──────────────────────────────────────────────────────────────
 
@@ -34,11 +37,15 @@ up: ## Start all services in the background
 	docker compose up -d
 
 .PHONY: down
-down: ## Stop services and remove volumes
+down: ## Stop services (preserves volumes / DB data)
+	docker compose down
+
+.PHONY: wipe
+wipe: ## Stop services AND remove volumes (DESTROYS DB data)
 	docker compose down -v
 
 .PHONY: restart
-restart: down up ## Stop everything and start fresh (down + up)
+restart: down up ## Cycle services without losing data
 
 .PHONY: docker-build
 docker-build: ## Rebuild docker images from scratch (no cache)
