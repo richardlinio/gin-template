@@ -98,12 +98,12 @@ func New() (*Application, error) {
 	authHandler := handler.NewAuthHandler(authService, jwtMiddleware, cfg.JWT, log, cfg.Server.RequestTimeout)
 
 	// Setup Gin router
-	ginRouter := gin.New()
-	r := router.NewRouter(ginRouter, cfg.CORS, cfg.RateLimit, cfg.JWT, log, healthHandler, authHandler, jwtMiddleware)
+	engine := gin.New()
+	r := router.NewRouter(engine, cfg.CORS, cfg.RateLimit, cfg.JWT, log, healthHandler, authHandler, jwtMiddleware)
 	r.Setup()
 
 	// Create HTTP server
-	httpServer := server.NewHTTPServer(cfg.Server, ginRouter)
+	httpServer := server.NewHTTPServer(cfg.Server, engine)
 
 	// Initialize scheduler and register jobs
 	jobScheduler := scheduler.NewScheduler(log)
