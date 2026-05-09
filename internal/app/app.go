@@ -98,12 +98,12 @@ func New() (*Application, error) {
 	authHandler := handler.NewAuthHandler(authService, jwtMiddleware, cfg.JWT, log, cfg.Server.RequestTimeout)
 
 	// Setup Gin router
-	ginRouter := gin.New()
-	r := router.NewRouter(ginRouter, cfg.CORS, cfg.RateLimit, cfg.JWT, log, healthHandler, authHandler, jwtMiddleware)
+	engine := gin.New()
+	r := router.NewRouter(engine, cfg.CORS, cfg.RateLimit, cfg.JWT, log, healthHandler, authHandler, jwtMiddleware)
 	r.Setup()
 
 	// Create HTTP server
-	httpServer := server.NewHTTPServer(cfg.Server, ginRouter)
+	httpServer := server.NewHTTPServer(cfg.Server, engine)
 
 	// Initialize scheduler and register jobs
 	jobScheduler := scheduler.NewScheduler(log)
@@ -171,7 +171,8 @@ func (a *Application) Run() error {
 	defer cancel()
 
 	// Shutdown HTTP server
-	if shutdownErr := a.server.Shutdown(shutdownCtx); shutdownErr != nil {
+	shutdownErr := a.server.Shutdown(shutdownCtx)
+	if shutdownErr != nil {
 		a.logger.Error("Error shutting down HTTP server", "error", shutdownErr)
 	}
 
@@ -182,10 +183,10 @@ func (a *Application) Run() error {
 
 	a.logger.Info("Application shutdown complete")
 
-	// Return the original error that triggered shutdown (if it's not a signal)
-	if err != nil && !errors.Is(err, ErrShutdownSignal) {
-		return err
+	// A signal-triggered shutdown is the normal exit path, not an error.
+	triggerErr := err
+	if errors.Is(triggerErr, ErrShutdownSignal) {
+		triggerErr = nil
 	}
-
-	return nil
+	return errors.Join(triggerErr, shutdownErr)
 }
